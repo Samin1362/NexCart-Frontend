@@ -120,56 +120,73 @@ function ProductsContent() {
 
       <main className="flex-1">
 
-        {/* ── Page Hero Header ── */}
-        <div className="relative overflow-hidden bg-bg-card border-b border-border">
-          {/* background dots */}
-          <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
-          {/* accent orb */}
+        {/* ── Page Banner ── */}
+        <div
+          className="relative overflow-hidden border-b border-border"
+          style={{ background: 'linear-gradient(135deg, #0F172A 0%, #0f1f42 55%, #1e3a8a 100%)' }}
+        >
+          {/* Dot grid overlay */}
+          <div className="absolute inset-0 dot-grid opacity-10 pointer-events-none" />
+
+          {/* Blue glow — bottom right */}
           <div
-            className="absolute -top-20 -right-20 h-64 w-64 opacity-10 pointer-events-none"
-            style={{ background: 'radial-gradient(circle, #2563EB 0%, transparent 70%)' }}
+            className="absolute -bottom-12 -right-12 h-52 w-52 pointer-events-none opacity-25"
+            style={{ background: 'radial-gradient(circle, #3B82F6 0%, transparent 70%)' }}
+          />
+          {/* Purple glow — top left */}
+          <div
+            className="absolute -top-8 left-1/4 h-36 w-36 pointer-events-none opacity-15"
+            style={{ background: 'radial-gradient(circle, #8B5CF6 0%, transparent 70%)' }}
           />
 
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-6 w-6 items-center justify-center bg-primary-accent text-white">
-                    <ShoppingBag className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary-accent">
-                    Explore
-                  </span>
+          {/* Gradient accent bar */}
+          <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-primary-accent via-indigo-400 to-purple-500" />
+
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+
+            {/* Top row: title + stat badges */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary-accent/20 border border-primary-accent/30">
+                  <ShoppingBag className="h-4 w-4 text-primary-accent" />
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary tracking-tight">
-                  All Products
-                </h1>
-                <p className="mt-1.5 text-sm text-text-secondary">
-                  {loading
-                    ? 'Loading products…'
-                    : meta
-                    ? `${meta.total.toLocaleString()} products available`
-                    : 'Discover our full collection'}
-                </p>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-none">
+                    All Products
+                  </h1>
+                  <p className="text-[11px] text-slate-400 mt-0.5 leading-none">
+                    {loading
+                      ? 'Loading products…'
+                      : meta
+                      ? `${meta.total.toLocaleString()} products available`
+                      : 'Discover our full collection'}
+                  </p>
+                </div>
               </div>
 
-              {/* Quick stats */}
-              <div className="hidden sm:flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-sm text-text-secondary border border-border bg-bg px-3 py-2">
-                  <TrendingUp className="h-4 w-4 text-primary-accent" />
-                  <span>New arrivals weekly</span>
+              {/* Stat badges */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-white/5 border border-white/10 px-3 py-1.5">
+                  <TrendingUp className="h-3.5 w-3.5 text-primary-accent" />
+                  <span className="hidden sm:inline">New arrivals weekly</span>
+                  <span className="sm:hidden">New weekly</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-text-secondary border border-border bg-bg px-3 py-2">
-                  <Star className="h-4 w-4 fill-secondary text-secondary" />
-                  <span>Top-rated brands</span>
+                <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-white/5 border border-white/10 px-3 py-1.5">
+                  <Star className="h-3.5 w-3.5 fill-secondary text-secondary" />
+                  <span className="hidden sm:inline">Top-rated brands</span>
+                  <span className="sm:hidden">Top-rated</span>
                 </div>
               </div>
             </div>
 
-            {/* Search bar — full width in hero */}
-            <div className="mt-6">
-              <SearchBar value={search} onChange={setSearch} />
-            </div>
+            {/* Dynamic search bar */}
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              loading={loading}
+              resultCount={meta?.total}
+            />
           </div>
         </div>
 
@@ -255,8 +272,8 @@ function ProductsContent() {
             <div className="flex-1 min-w-0">
               {loading ? (
                 /* Skeleton grid */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
-                  {Array.from({ length: 9 }).map((_, i) => (
+                <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {Array.from({ length: 12 }).map((_, i) => (
                     <div key={i} className="border border-border bg-bg flex flex-col">
                       <Skeleton className="h-52 w-full" />
                       <div className="p-4 space-y-2.5">
@@ -300,7 +317,7 @@ function ProductsContent() {
               ) : (
                 <>
                   {/* Product grid with staggered animation */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-5">
                     {products.map((product, i) => (
                       <div
                         key={product._id}
