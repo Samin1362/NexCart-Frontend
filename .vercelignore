@@ -1,0 +1,7 @@
+# Local dev env — contains localhost URLs, must NOT go to production
+.env.local
+.env*.local
+
+# Build cache — regenerated during build
+.next/
+node_modules/
