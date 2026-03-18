@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Package, Users, ShoppingBag, Star } from 'lucide-react';
+import api from '@/lib/api';
 
-const stats = [
-  { icon: Package,     value: 10,  suffix: 'K+', label: 'Products',      sub: 'Across all categories' },
-  { icon: Users,       value: 50,  suffix: 'K+', label: 'Customers',     sub: 'Worldwide & growing' },
-  { icon: ShoppingBag, value: 100, suffix: 'K+', label: 'Orders',        sub: 'Delivered on time' },
-  { icon: Star,        value: 4.8, suffix: '/5', label: 'Average Rating', sub: 'From verified buyers' },
+type StatItem = { icon: typeof Package; value: number; suffix: string; label: string; sub: string };
+
+const defaultStats: StatItem[] = [
+  { icon: Package,     value: 10,  suffix: 'K+', label: 'Products',       sub: 'Across all categories' },
+  { icon: Users,       value: 50,  suffix: 'K+', label: 'Happy Customers', sub: 'Worldwide & growing' },
+  { icon: ShoppingBag, value: 100, suffix: 'K+', label: 'Orders',          sub: 'Delivered on time' },
+  { icon: Star,        value: 4.8, suffix: '/5', label: 'Average Rating',  sub: 'From verified buyers' },
 ];
 
 function AnimatedCounter({ target, suffix, inView }: { target: number; suffix: string; inView: boolean }) {
@@ -37,6 +40,23 @@ function AnimatedCounter({ target, suffix, inView }: { target: number; suffix: s
 export default function StatsSection() {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
+  const [stats, setStats] = useState<StatItem[]>(defaultStats);
+
+  // Fetch real product count from public API
+  useEffect(() => {
+    api.get('/products?limit=1')
+      .then(({ data }) => {
+        const total: number = data?.meta?.total ?? 0;
+        if (total > 0) {
+          setStats(prev => prev.map((s, i) =>
+            i === 0
+              ? { ...s, value: total, suffix: '', label: 'Products', sub: `In ${total} listings` }
+              : s
+          ));
+        }
+      })
+      .catch(() => {/* keep defaults */});
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -58,17 +78,12 @@ export default function StatsSection() {
                 key={i}
                 className="group flex flex-col items-center text-center bg-bg px-6 py-10 transition-colors duration-200 hover:bg-bg-card"
               >
-                {/* Icon */}
                 <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-bg-card text-primary-accent transition-all duration-300 group-hover:border-primary-accent/40 group-hover:bg-primary-accent/5">
                   <Icon className="h-5 w-5" />
                 </div>
-
-                {/* Number */}
                 <p className="text-3xl sm:text-4xl font-extrabold text-primary-accent tabular-nums">
                   <AnimatedCounter target={stat.value} suffix={stat.suffix} inView={inView} />
                 </p>
-
-                {/* Label */}
                 <p className="mt-2 text-sm font-bold text-text-primary">{stat.label}</p>
                 <p className="mt-0.5 text-xs text-text-secondary">{stat.sub}</p>
               </div>

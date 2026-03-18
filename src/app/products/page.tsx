@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   SlidersHorizontal, PackageSearch, X, Sparkles,
@@ -12,6 +12,7 @@ import ProductCard from '@/components/products/ProductCard';
 import SearchBar from '@/components/products/SearchBar';
 import SortDropdown from '@/components/products/SortDropdown';
 import FilterSidebar from '@/components/products/FilterSidebar';
+import RecentlyViewed from '@/components/products/RecentlyViewed';
 import Pagination from '@/components/ui/Pagination';
 import Skeleton from '@/components/ui/Skeleton';
 import api from '@/lib/api';
@@ -41,7 +42,12 @@ function ProductsContent() {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [bannerVisible, setBannerVisible] = useState(true);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const hasLoadedRef = useRef(false);
 
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [sort, setSort] = useState(searchParams.get('sort') || 'newest');
@@ -54,6 +60,13 @@ function ProductsContent() {
   });
 
   const debouncedSearch = useDebounce(search, 300);
+
+  /* Collapse banner on scroll */
+  useEffect(() => {
+    const onScroll = () => setBannerVisible(window.scrollY < 120);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
@@ -69,16 +82,22 @@ function ProductsContent() {
   }, [debouncedSearch, filters, sort, page]);
 
   const fetchProducts = useCallback(async () => {
-    setLoading(true);
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+    } else {
+      setIsFetching(true);
+    }
     try {
       const { data } = await api.get(`/products?${buildQuery()}`);
       setProducts(data.data || []);
       setMeta(data.meta || null);
+      hasLoadedRef.current = true;
     } catch {
       setProducts([]);
       setMeta(null);
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   }, [buildQuery]);
 
@@ -101,6 +120,14 @@ function ProductsContent() {
 
   const handleFiltersChange = (f: Filters) => setFilters(f);
 
+  const handlePageChange = (p: number) => {
+    setPage(p);
+    // Scroll to product grid top (not page top)
+    setTimeout(() => {
+      gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
   /* Active filter chips */
   const activeChips: { label: string; clear: () => void }[] = [];
   if (filters.category) activeChips.push({ label: `Category: ${filters.category}`, clear: () => setFilters((f) => ({ ...f, category: '' })) });
@@ -114,15 +141,27 @@ function ProductsContent() {
 
   const totalActive = activeChips.length;
 
+  /* Banner subtitle text */
+  const bannerSubtitle = loading
+    ? 'Loading products…'
+    : debouncedSearch && meta
+    ? `${meta.total.toLocaleString()} result${meta.total !== 1 ? 's' : ''} for "${debouncedSearch}"`
+    : meta
+    ? `${meta.total.toLocaleString()} products available`
+    : 'Discover our full collection';
+
   return (
     <div className="min-h-screen flex flex-col bg-bg">
       <Navbar />
 
       <main className="flex-1">
 
-        {/* ── Page Banner ── */}
+        {/* ── Page Banner (collapses on scroll) ── */}
         <div
-          className="relative overflow-hidden border-b border-border"
+          className={cn(
+            'relative overflow-hidden border-b border-border transition-all duration-300 ease-in-out',
+            bannerVisible ? 'max-h-72 opacity-100' : 'max-h-0 opacity-0 border-b-0'
+          )}
           style={{ background: 'linear-gradient(135deg, #0F172A 0%, #0f1f42 55%, #1e3a8a 100%)' }}
         >
           {/* Dot grid overlay */}
@@ -156,11 +195,7 @@ function ProductsContent() {
                     All Products
                   </h1>
                   <p className="text-[11px] text-slate-400 mt-0.5 leading-none">
-                    {loading
-                      ? 'Loading products…'
-                      : meta
-                      ? `${meta.total.toLocaleString()} products available`
-                      : 'Discover our full collection'}
+                    {bannerSubtitle}
                   </p>
                 </div>
               </div>
@@ -269,7 +304,10 @@ function ProductsContent() {
               onClose={() => setFilterOpen(false)}
             />
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" ref={gridRef}>
+              {/* Recently viewed strip */}
+              <RecentlyViewed />
+
               {loading ? (
                 /* Skeleton grid */
                 <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -316,17 +354,27 @@ function ProductsContent() {
 
               ) : (
                 <>
-                  {/* Product grid with staggered animation */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {products.map((product, i) => (
-                      <div
-                        key={product._id}
-                        className="animate-fade-in-up"
-                        style={{ animationDelay: `${Math.min(i * 0.05, 0.4)}s` }}
-                      >
-                        <ProductCard product={product} />
+                  {/* Product grid with fetching overlay */}
+                  <div className="relative">
+                    {isFetching && (
+                      <div className="absolute inset-0 z-10 bg-bg/60 backdrop-blur-[2px] flex items-start justify-center pt-16">
+                        <div className="flex items-center gap-2 bg-bg border border-border px-4 py-2 shadow-lg text-sm text-text-secondary">
+                          <span className="h-3.5 w-3.5 border-2 border-primary-accent border-t-transparent rounded-full animate-spin shrink-0" />
+                          Updating results…
+                        </div>
                       </div>
-                    ))}
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+                      {products.map((product, i) => (
+                        <div
+                          key={product._id}
+                          className="animate-fade-in-up"
+                          style={{ animationDelay: `${Math.min(i * 0.05, 0.4)}s` }}
+                        >
+                          <ProductCard product={product} />
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Pagination */}
@@ -335,7 +383,11 @@ function ProductsContent() {
                       <p className="text-xs text-text-secondary">
                         Page {page} of {meta.totalPages} · {meta.total} products
                       </p>
-                      <Pagination page={page} totalPages={meta.totalPages} onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+                      <Pagination
+                        page={page}
+                        totalPages={meta.totalPages}
+                        onPageChange={handlePageChange}
+                      />
                     </div>
                   )}
                 </>

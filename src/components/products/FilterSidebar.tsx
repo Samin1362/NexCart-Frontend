@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Star, X, SlidersHorizontal, Tag, DollarSign, LayoutGrid } from 'lucide-react';
+
+const PRICE_MAX = 5000;
 import api from '@/lib/api';
 import { ICategory } from '@/types';
 import { cn } from '@/lib/utils';
@@ -113,30 +115,60 @@ export default function FilterSidebar({ filters, onChange, open, onClose }: Filt
           <DollarSign className="h-3.5 w-3.5 text-text-secondary" />
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Price Range</h4>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-text-secondary">$</span>
-            <input
-              type="number"
-              value={filters.minPrice}
-              onChange={(e) => update('minPrice', e.target.value)}
-              placeholder="Min"
-              min="0"
-              className="h-9 w-full border border-border bg-bg pl-6 pr-2 text-sm text-text-primary focus:border-primary-accent focus:outline-none focus:ring-1 focus:ring-primary-accent/20 transition-all"
-            />
-          </div>
-          <div className="h-px w-3 bg-border shrink-0" />
-          <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-text-secondary">$</span>
-            <input
-              type="number"
-              value={filters.maxPrice}
-              onChange={(e) => update('maxPrice', e.target.value)}
-              placeholder="Max"
-              min="0"
-              className="h-9 w-full border border-border bg-bg pl-6 pr-2 text-sm text-text-primary focus:border-primary-accent focus:outline-none focus:ring-1 focus:ring-primary-accent/20 transition-all"
-            />
-          </div>
+
+        {/* Current range display */}
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-xs font-semibold text-primary-accent bg-primary-accent/8 border border-primary-accent/20 px-2 py-0.5">
+            ${(Number(filters.minPrice) || 0).toLocaleString()}
+          </span>
+          <span className="text-[10px] text-text-secondary">–</span>
+          <span className="text-xs font-semibold text-primary-accent bg-primary-accent/8 border border-primary-accent/20 px-2 py-0.5">
+            {filters.maxPrice ? `$${Number(filters.maxPrice).toLocaleString()}` : `$${PRICE_MAX.toLocaleString()}+`}
+          </span>
+        </div>
+
+        {/* Dual range slider */}
+        <div className="relative h-5 flex items-center mb-4 mx-1">
+          {/* Track background */}
+          <div className="absolute inset-x-0 h-1 bg-border" />
+          {/* Active range highlight */}
+          <div
+            className="absolute h-1 bg-primary-accent"
+            style={{
+              left: `${((Number(filters.minPrice) || 0) / PRICE_MAX) * 100}%`,
+              right: `${100 - ((Number(filters.maxPrice) || PRICE_MAX) / PRICE_MAX) * 100}%`,
+            }}
+          />
+          {/* Min thumb */}
+          <input
+            type="range"
+            min={0}
+            max={PRICE_MAX}
+            step={50}
+            value={Number(filters.minPrice) || 0}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              const maxVal = Number(filters.maxPrice) || PRICE_MAX;
+              if (val < maxVal) update('minPrice', val === 0 ? '' : String(val));
+            }}
+            className="absolute w-full h-1 appearance-none bg-transparent cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-accent [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-bg [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-grab [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:border-radius-full [&::-moz-range-thumb]:bg-primary-accent [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-bg [&::-moz-range-thumb]:cursor-grab"
+            style={{ zIndex: (Number(filters.minPrice) || 0) > PRICE_MAX - 200 ? 5 : 3 }}
+          />
+          {/* Max thumb */}
+          <input
+            type="range"
+            min={0}
+            max={PRICE_MAX}
+            step={50}
+            value={Number(filters.maxPrice) || PRICE_MAX}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              const minVal = Number(filters.minPrice) || 0;
+              if (val > minVal) update('maxPrice', val === PRICE_MAX ? '' : String(val));
+            }}
+            className="absolute w-full h-1 appearance-none bg-transparent cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-accent [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-bg [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-grab [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:bg-primary-accent [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-bg [&::-moz-range-thumb]:cursor-grab"
+            style={{ zIndex: 4 }}
+          />
         </div>
         {/* Quick price ranges */}
         <div className="flex flex-wrap gap-1.5 mt-2.5">

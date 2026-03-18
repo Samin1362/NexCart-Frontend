@@ -13,6 +13,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/products/ProductCard';
 import ReviewSection from '@/components/products/ReviewSection';
+import { saveRecentlyViewed } from '@/components/products/RecentlyViewed';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import api from '@/lib/api';
@@ -46,6 +47,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         const { data } = await api.get(`/products/${slug}`);
         const p = data.data as IProduct;
         setProduct(p);
+        // Save to recently-viewed strip
+        saveRecentlyViewed({
+          slug,
+          title: p.title,
+          image: p.images?.[0] || '',
+          price: p.discountPrice || p.price,
+        });
         setQuantity(1);
         setSelectedImage(0);
         setImgErrors(new Array(p.images?.length || 0).fill(false));
