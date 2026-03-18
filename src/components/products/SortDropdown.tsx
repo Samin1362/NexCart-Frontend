@@ -42,7 +42,10 @@ export default function SortDropdown({ value, onChange }: SortDropdownProps) {
       >
         <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
         <span className="hidden sm:inline">{current.label}</span>
-        <span className="sm:hidden">Sort</span>
+        <span className="sm:hidden text-xs">
+          <span className="text-text-secondary/70">Sort: </span>
+          {current.label.replace('Price: ', '').replace(' First', '').replace(' Rated', '')}
+        </span>
         <ChevronDown
           className={cn('h-3.5 w-3.5 shrink-0 transition-transform duration-200', open && 'rotate-180')}
         />

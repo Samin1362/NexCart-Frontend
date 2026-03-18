@@ -5,6 +5,7 @@ import ThemeProvider from '@/providers/ThemeProvider';
 import AuthProvider from '@/providers/AuthProvider';
 import CartProvider from '@/providers/CartProvider';
 import ChatWidget from '@/components/ChatWidget';
+import ServerWakeLoader from '@/components/ServerWakeLoader';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -36,6 +37,7 @@ export default function RootLayout({
             <CartProvider>
               {children}
               <ChatWidget />
+              <ServerWakeLoader />
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -1,39 +1,74 @@
-import { Star, Quote, MessageSquare } from 'lucide-react';
+'use client';
 
-const testimonials = [
+import { useEffect, useState } from 'react';
+import { Star, Quote, MessageSquare } from 'lucide-react';
+import api from '@/lib/api';
+
+interface Testimonial {
+  name: string;
+  role: string;
+  rating: number;
+  quote: string;
+  initial: string;
+  verified: boolean;
+  productTitle?: string;
+}
+
+const staticTestimonials: Testimonial[] = [
   {
     name: 'Sarah Johnson',
     role: 'Frequent Shopper',
     rating: 5,
-    quote:
-      'NexCart has completely changed how I shop online. The product quality is excellent, delivery is always on time, and the prices are unbeatable. Highly recommended!',
+    quote: 'NexCart has completely changed how I shop online. The product quality is excellent, delivery is always on time, and the prices are unbeatable. Highly recommended!',
     initial: 'S',
     verified: true,
-    orders: '47 orders',
   },
   {
     name: 'Michael Chen',
     role: 'Tech Enthusiast',
     rating: 5,
-    quote:
-      "I've been buying electronics from NexCart for months. Accurate descriptions, smooth checkout, and responsive customer support — everything you'd want.",
+    quote: "I've been buying electronics from NexCart for months. Accurate descriptions, smooth checkout, and responsive customer support — everything you'd want.",
     initial: 'M',
     verified: true,
-    orders: '31 orders',
   },
   {
     name: 'Emily Rodriguez',
     role: 'Home Decorator',
     rating: 4,
-    quote:
-      'Great selection of home and kitchen products. I furnished my entire apartment through NexCart. The free shipping on orders over $100 is a huge bonus.',
+    quote: 'Great selection of home and kitchen products. I furnished my entire apartment through NexCart. The free shipping on orders over $100 is a huge bonus.',
     initial: 'E',
     verified: true,
-    orders: '19 orders',
   },
 ];
 
 export default function TestimonialsSection() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(staticTestimonials);
+
+  useEffect(() => {
+    api.get('/reviews/top')
+      .then(({ data }) => {
+        const reviews = data?.data ?? [];
+        if (reviews.length >= 2) {
+          const mapped: Testimonial[] = reviews.slice(0, 3).map((r: {
+            reviewer: string;
+            rating: number;
+            comment: string;
+            productTitle?: string;
+          }) => ({
+            name: r.reviewer,
+            role: r.productTitle ? `Purchased: ${r.productTitle}` : 'Verified Buyer',
+            rating: r.rating,
+            quote: r.comment,
+            initial: r.reviewer.charAt(0).toUpperCase(),
+            verified: true,
+            productTitle: r.productTitle,
+          }));
+          setTestimonials(mapped);
+        }
+      })
+      .catch(() => {/* keep static */});
+  }, []);
+
   return (
     <section className="py-16 sm:py-24 bg-bg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -79,7 +114,7 @@ export default function TestimonialsSection() {
               </div>
 
               {/* Quote */}
-              <p className="flex-1 px-5 pt-3 pb-5 text-sm text-text-secondary leading-relaxed">
+              <p className="flex-1 px-5 pt-3 pb-5 text-sm text-text-secondary leading-relaxed line-clamp-4">
                 &ldquo;{t.quote}&rdquo;
               </p>
 
@@ -96,10 +131,9 @@ export default function TestimonialsSection() {
                         <span className="text-[9px] font-bold bg-primary-accent text-white px-1.5 py-0.5">✓</span>
                       )}
                     </div>
-                    <p className="text-xs text-text-secondary">{t.role}</p>
+                    <p className="text-xs text-text-secondary truncate max-w-[140px]">{t.role}</p>
                   </div>
                 </div>
-                <span className="text-[10px] text-text-secondary/50 shrink-0">{t.orders}</span>
               </div>
             </div>
           ))}

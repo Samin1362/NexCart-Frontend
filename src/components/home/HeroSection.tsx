@@ -131,7 +131,7 @@ export default function HeroSection() {
               style={{ animationDelay: '0.35s' }}
             >
               <Link
-                href="/products"
+                href="/products?sort=-createdAt"
                 className="btn-shimmer group inline-flex h-13 w-full sm:w-auto items-center justify-center gap-2.5 px-9 text-sm font-bold text-white transition-all duration-200"
                 style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)' }}
               >
@@ -139,7 +139,7 @@ export default function HeroSection() {
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
               <Link
-                href="/products?sort=discount"
+                href="/products?discounted=true"
                 className="inline-flex h-13 w-full sm:w-auto items-center justify-center gap-2 border border-border bg-bg px-9 text-sm font-bold text-text-primary hover:border-primary-accent hover:text-primary-accent transition-all duration-200"
               >
                 <TrendingUp className="h-4 w-4" />

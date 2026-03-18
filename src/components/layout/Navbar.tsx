@@ -48,7 +48,10 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [badgeKey, setBadgeKey] = useState(0);
-  const [announcementVisible, setAnnouncementVisible] = useState(true);
+  const [announcementVisible, setAnnouncementVisible] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('nexcart-announcement-dismissed') !== 'true';
+  });
 
   const profileRef = useRef<HTMLDivElement>(null);
   const prevItemCount = useRef(itemCount);
@@ -133,7 +136,10 @@ export default function Navbar() {
               Shop now <ArrowRight className="h-3 w-3" />
             </Link>
             <button
-              onClick={() => setAnnouncementVisible(false)}
+              onClick={() => {
+                setAnnouncementVisible(false);
+                localStorage.setItem('nexcart-announcement-dismissed', 'true');
+              }}
               className="absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer"
               aria-label="Dismiss announcement"
             >
