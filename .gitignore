@@ -30,9 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
-!.env.example
+!.env.example        # reference template — always safe to commit
+!.env.production     # NEXT_PUBLIC_ only — safe to commit, used by Vercel build
 
 # vercel
 .vercel
