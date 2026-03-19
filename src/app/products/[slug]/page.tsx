@@ -7,13 +7,15 @@ import {
   Star, ShoppingCart, Minus, Plus, ArrowLeft,
   Package, Truck, Shield, RotateCcw, Tag,
   ChevronLeft, ChevronRight, Zap, Check,
-  Sparkles, BadgeCheck, Eye,
+  Sparkles, BadgeCheck, Eye, Heart, Share2,
+  ZoomIn, X, AlertTriangle,
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/products/ProductCard';
 import ReviewSection from '@/components/products/ReviewSection';
 import { saveRecentlyViewed } from '@/components/products/RecentlyViewed';
+import CartDrawer from '@/components/cart/CartDrawer';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import api from '@/lib/api';
@@ -39,6 +41,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [selectedImage, setSelectedImage] = useState(0);
   const [imgErrors, setImgErrors] = useState<boolean[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>('description');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -77,8 +83,49 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     fetchProduct();
   }, [slug]);
 
+  // Load wishlist state from localStorage when product changes
+  useEffect(() => {
+    if (!slug) return;
+    try {
+      const wl: string[] = JSON.parse(localStorage.getItem('nexcart-wishlist') || '[]');
+      setWishlisted(wl.includes(slug));
+    } catch { /* ignore */ }
+  }, [slug]);
+
+  // Close lightbox on Escape
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightboxOpen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightboxOpen]);
+
   const handleImgError = (i: number) => {
     setImgErrors((prev) => { const next = [...prev]; next[i] = true; return next; });
+  };
+
+  const toggleWishlist = () => {
+    if (!slug) return;
+    try {
+      const wl: string[] = JSON.parse(localStorage.getItem('nexcart-wishlist') || '[]');
+      const next = wishlisted ? wl.filter((s) => s !== slug) : [...wl, slug];
+      localStorage.setItem('nexcart-wishlist', JSON.stringify(next));
+      setWishlisted(!wishlisted);
+    } catch { /* ignore */ }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = product?.title || 'Check out this product';
+    if (navigator.share) {
+      try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch { /* ignore */ }
+    }
   };
 
   const handleAddToCart = async () => {
@@ -87,6 +134,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     try {
       await addItem(product._id, quantity);
       setAdded(true);
+      setCartDrawerOpen(true);
       setTimeout(() => setAdded(false), 2500);
     } catch {
       // silent
@@ -202,17 +250,30 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <div className="space-y-3">
 
               {/* Main image */}
-              <div className="group relative h-[380px] sm:h-[440px] border border-border bg-bg-card overflow-hidden">
+              <div
+                className={cn(
+                  'group relative h-[380px] sm:h-[440px] border border-border bg-bg-card overflow-hidden',
+                  currentImageValid && 'cursor-zoom-in'
+                )}
+                onClick={() => currentImageValid && setLightboxOpen(true)}
+              >
                 {currentImageValid ? (
-                  <Image
-                    src={currentImageUrl}
-                    alt={product.title}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-contain transition-all duration-500"
-                    priority
-                    onError={() => handleImgError(selectedImage)}
-                  />
+                  <>
+                    <Image
+                      src={currentImageUrl}
+                      alt={product.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      className="object-contain transition-all duration-500 group-hover:scale-105"
+                      priority
+                      onError={() => handleImgError(selectedImage)}
+                    />
+                    {/* Zoom hint */}
+                    <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 bg-bg/70 border border-border px-2.5 py-1 text-[10px] text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      <ZoomIn className="h-3 w-3" />
+                      Click to zoom
+                    </div>
+                  </>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-bg-card">
                     <Package className="h-16 w-16 text-border" />
@@ -343,9 +404,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     <Sparkles className="h-3 w-3" /> Featured
                   </span>
                 )}
-                {inStock && (
+                {inStock && product.stock >= 10 && (
                   <span className="flex items-center gap-1 px-2 py-0.5 bg-success/10 text-success text-[10px] font-bold uppercase tracking-wide">
                     <BadgeCheck className="h-3 w-3" /> In Stock
+                  </span>
+                )}
+                {inStock && product.stock < 10 && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-warning/10 text-warning text-[10px] font-bold uppercase tracking-wide animate-pulse">
+                    <AlertTriangle className="h-3 w-3" /> Only {product.stock} left!
                   </span>
                 )}
               </div>
@@ -496,6 +562,32 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 </div>
               )}
 
+              {/* Wishlist + Share row */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={toggleWishlist}
+                  className={cn(
+                    'flex items-center gap-2 h-10 px-4 border text-sm font-medium transition-all duration-200 cursor-pointer',
+                    wishlisted
+                      ? 'border-error/50 bg-error/8 text-error'
+                      : 'border-border text-text-secondary hover:border-error/50 hover:text-error'
+                  )}
+                  aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <Heart className={cn('h-4 w-4 transition-all', wishlisted && 'fill-error')} />
+                  <span>{wishlisted ? 'Wishlisted' : 'Wishlist'}</span>
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-2 h-10 px-4 border border-border text-sm font-medium text-text-secondary hover:border-primary-accent hover:text-primary-accent transition-all duration-200 cursor-pointer"
+                  aria-label="Share product"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span>{copied ? 'Link Copied!' : 'Share'}</span>
+                </button>
+              </div>
+
               {/* Trust cards */}
               <div className="grid grid-cols-3 gap-2 pt-1">
                 {[
@@ -632,6 +724,78 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       </main>
 
       <Footer />
+
+      {/* ── Cart Drawer ── */}
+      <CartDrawer open={cartDrawerOpen} onClose={() => setCartDrawerOpen(false)} />
+
+      {/* ── Image Lightbox ── */}
+      {lightboxOpen && currentImageValid && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 z-10 h-10 w-10 flex items-center justify-center border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+            aria-label="Close lightbox"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {/* Prev / Next */}
+          {product.images.length > 1 && selectedImage > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); goImage(-1); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 h-11 w-11 flex items-center justify-center border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {product.images.length > 1 && selectedImage < product.images.length - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); goImage(1); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 h-11 w-11 flex items-center justify-center border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+
+          {/* Image */}
+          <div
+            className="relative w-full max-w-3xl max-h-[85vh] mx-6 aspect-square"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={currentImageUrl}
+              alt={product.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          {/* Counter */}
+          {product.images.length > 1 && (
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+              {product.images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setSelectedImage(i); }}
+                  className={cn(
+                    'h-1.5 transition-all duration-200 cursor-pointer',
+                    i === selectedImage ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/70'
+                  )}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

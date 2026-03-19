@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { Star, Sparkles, Loader2, Trash2 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
@@ -30,14 +30,25 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
   // AI summary state
   const [summary, setSummary] = useState<{ summary: string; sentiment: string; reviewCount: number } | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const autoSummaryFiredRef = useRef(false);
 
   const fetchReviews = async (p = 1) => {
     setLoading(true);
     try {
       const { data } = await api.get(`/reviews/product/${productId}?page=${p}&limit=5`);
-      setReviews(data.data || []);
+      const fetched: IReview[] = data.data || [];
+      setReviews(fetched);
       setTotalPages(data.meta?.totalPages || 1);
       setPage(p);
+      // Auto-load AI summary once when 3+ reviews are present
+      if (p === 1 && !autoSummaryFiredRef.current && (data.meta?.total ?? fetched.length) >= 3) {
+        autoSummaryFiredRef.current = true;
+        setSummaryLoading(true);
+        api.post('/ai/review-summary', { productId })
+          .then(({ data: d }) => setSummary(d.data))
+          .catch(() => {})
+          .finally(() => setSummaryLoading(false));
+      }
     } catch {
       setReviews([]);
     } finally {
@@ -111,17 +122,25 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
           Reviews {!loading && `(${reviews.length})`}
         </h2>
 
-        {/* AI Summary Button */}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleAISummary}
-          loading={summaryLoading}
-          disabled={summaryLoading}
-        >
-          <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-          AI Summary
-        </Button>
+        {/* AI Summary Button — only shown when auto-summary didn't fire */}
+        {!summary && !summaryLoading && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleAISummary}
+            loading={summaryLoading}
+            disabled={summaryLoading}
+          >
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+            AI Summary
+          </Button>
+        )}
+        {summaryLoading && (
+          <span className="flex items-center gap-1.5 text-xs text-text-secondary">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Generating summary…
+          </span>
+        )}
       </div>
 
       {/* AI Summary Result */}

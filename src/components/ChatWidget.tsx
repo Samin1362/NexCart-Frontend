@@ -40,8 +40,21 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /* Listen for CartDrawer open/close — shift widget to left when drawer is open */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const isOpen = (e as CustomEvent<{ open: boolean }>).detail.open;
+      setCartDrawerOpen(isOpen);
+      // Close chat panel when cart drawer opens to avoid two panels fighting for space
+      if (isOpen) setOpen(false);
+    };
+    window.addEventListener('cart-drawer-toggle', handler);
+    return () => window.removeEventListener('cart-drawer-toggle', handler);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,7 +112,10 @@ export default function ChatWidget() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 group cursor-pointer"
+          className={cn(
+            'fixed bottom-6 z-50 group cursor-pointer transition-all duration-300',
+            cartDrawerOpen ? 'left-6' : 'right-6'
+          )}
           aria-label="Open AI chat"
         >
           {/* Ping ring */}
@@ -117,7 +133,11 @@ export default function ChatWidget() {
       {/* ── Chat Panel ── */}
       {open && (
         <div
-          className="animate-chat-slide-up fixed bottom-6 right-6 z-50 w-[360px] sm:w-[400px] flex flex-col border border-border bg-bg"
+          className={cn(
+            'animate-chat-slide-up fixed bottom-6 z-50 flex flex-col border border-border bg-bg',
+            'w-[calc(100vw-24px)] sm:w-[360px] md:w-[400px]',
+            cartDrawerOpen ? 'left-3 sm:left-6' : 'right-3 sm:right-6'
+          )}
           style={{
             height: '540px',
             boxShadow: '0 0 0 1px rgba(37,99,235,0.12), 0 24px 48px rgba(0,0,0,0.18), 0 0 40px rgba(37,99,235,0.06)',
