@@ -15,6 +15,7 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  terms?: string;
 }
 
 const perks = [
@@ -30,21 +31,75 @@ const stats = [
   { value: '5 min', label: 'Setup Time' },
 ];
 
+// ── Password strength helpers ──────────────────────────────────────────────
+type StrengthLevel = 'weak' | 'medium' | 'strong';
+
+function getPasswordStrength(pw: string): { level: StrengthLevel; score: number; label: string } {
+  if (!pw) return { level: 'weak', score: 0, label: '' };
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  if (score <= 2) return { level: 'weak',   score, label: 'Weak' };
+  if (score <= 3) return { level: 'medium', score, label: 'Medium' };
+  return           { level: 'strong', score, label: 'Strong' };
+}
+
+const STRENGTH_COLORS: Record<StrengthLevel, string> = {
+  weak:   '#ef4444',
+  medium: '#f59e0b',
+  strong: '#22c55e',
+};
+
+function PasswordStrengthMeter({ password }: { password: string }) {
+  const { level, label } = getPasswordStrength(password);
+  if (!password) return null;
+
+  const segments = 3;
+  const filled = level === 'weak' ? 1 : level === 'medium' ? 2 : 3;
+  const color = STRENGTH_COLORS[level];
+
+  return (
+    <div className="mt-2 space-y-1.5">
+      <div className="flex gap-1">
+        {Array.from({ length: segments }).map((_, i) => (
+          <div
+            key={i}
+            className="h-1 flex-1 transition-all duration-300"
+            style={{
+              backgroundColor: i < filled ? color : 'var(--border)',
+            }}
+          />
+        ))}
+      </div>
+      <p className="text-xs font-medium transition-colors" style={{ color }}>
+        {label} password
+        {level === 'weak' && ' — add uppercase, numbers or symbols'}
+        {level === 'medium' && ' — add more variety to strengthen'}
+      </p>
+    </div>
+  );
+}
+
 export default function RegisterPage() {
   const { user, register, googleLogin } = useAuth();
   const router = useRouter();
 
-  const [name, setName]                             = useState('');
-  const [email, setEmail]                           = useState('');
-  const [password, setPassword]                     = useState('');
-  const [confirmPassword, setConfirmPassword]       = useState('');
-  const [showPassword, setShowPassword]             = useState(false);
+  const [name, setName]                               = useState('');
+  const [email, setEmail]                             = useState('');
+  const [password, setPassword]                       = useState('');
+  const [confirmPassword, setConfirmPassword]         = useState('');
+  const [showPassword, setShowPassword]               = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors]                         = useState<FormErrors>({});
-  const [apiError, setApiError]                     = useState('');
-  const [loading, setLoading]                       = useState(false);
-  const [googleLoading, setGoogleLoading]           = useState(false);
-  const [success, setSuccess]                       = useState(false);
+  const [acceptedTerms, setAcceptedTerms]             = useState(false);
+  const [errors, setErrors]                           = useState<FormErrors>({});
+  const [apiError, setApiError]                       = useState('');
+  const [loading, setLoading]                         = useState(false);
+  const [googleLoading, setGoogleLoading]             = useState(false);
+  const [success, setSuccess]                         = useState(false);
 
   useEffect(() => {
     if (user) router.push('/dashboard');
@@ -75,6 +130,9 @@ export default function RegisterPage() {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
+    }
+    if (!acceptedTerms) {
+      newErrors.terms = 'You must accept the Terms & Privacy Policy to continue';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -289,21 +347,26 @@ export default function RegisterPage() {
               autoComplete="email"
             />
 
-            <div className="relative">
-              <Input
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); clearFieldError('password'); }}
-                error={errors.password}
-                autoComplete="new-password"
-              />
-              <button type="button" onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-[34px] text-text-secondary hover:text-text-primary cursor-pointer"
-                tabIndex={-1} aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+            {/* Password + strength meter */}
+            <div>
+              <div className="relative">
+                <Input
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="At least 6 characters"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); clearFieldError('password'); }}
+                  error={errors.password}
+                  autoComplete="new-password"
+                />
+                <button type="button" onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-[34px] text-text-secondary hover:text-text-primary cursor-pointer"
+                  tabIndex={-1} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {/* Strength meter — shown only when password is non-empty */}
+              <PasswordStrengthMeter password={password} />
             </div>
 
             <div className="relative">
@@ -321,6 +384,48 @@ export default function RegisterPage() {
                 tabIndex={-1} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
+            </div>
+
+            {/* Terms & Conditions checkbox */}
+            <div className="space-y-1">
+              <label className="flex items-start gap-2.5 cursor-pointer group">
+                <div className="relative flex items-center justify-center mt-0.5 shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => { setAcceptedTerms(e.target.checked); clearFieldError('terms'); }}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`h-4 w-4 border transition-colors duration-150 flex items-center justify-center ${
+                      errors.terms
+                        ? 'border-error bg-error/5'
+                        : acceptedTerms
+                        ? 'bg-primary-accent border-primary-accent'
+                        : 'bg-bg border-border group-hover:border-primary-accent/60'
+                    }`}
+                  >
+                    {acceptedTerms && (
+                      <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter"/>
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <span className="text-sm text-text-secondary leading-snug group-hover:text-text-primary transition-colors">
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-primary-accent hover:underline font-medium" target="_blank" rel="noopener noreferrer">
+                    Terms of Service
+                  </Link>
+                  {' '}and{' '}
+                  <Link href="/privacy" className="text-primary-accent hover:underline font-medium" target="_blank" rel="noopener noreferrer">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {errors.terms && (
+                <p className="text-xs text-error pl-6">{errors.terms}</p>
+              )}
             </div>
 
             <Button type="submit" loading={loading} disabled={success} className="w-full !mt-5">
