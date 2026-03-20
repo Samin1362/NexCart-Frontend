@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Eye, EyeOff, LogIn, Zap, ShieldCheck, Truck, RotateCcw, Star, Loader2, ArrowLeft,
+  Mail, CheckCircle, X,
 } from 'lucide-react';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '@/firebase/firebase.config';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/providers/AuthProvider';
@@ -35,10 +38,18 @@ export default function LoginPage() {
   const [email, setEmail]                   = useState('');
   const [password, setPassword]             = useState('');
   const [showPassword, setShowPassword]     = useState(false);
+  const [rememberMe, setRememberMe]         = useState(false);
   const [errors, setErrors]                 = useState<FormErrors>({});
   const [apiError, setApiError]             = useState('');
   const [loading, setLoading]               = useState(false);
   const [googleLoading, setGoogleLoading]   = useState(false);
+
+  // Forgot password state
+  const [showForgot, setShowForgot]         = useState(false);
+  const [forgotEmail, setForgotEmail]       = useState('');
+  const [forgotLoading, setForgotLoading]   = useState(false);
+  const [forgotError, setForgotError]       = useState('');
+  const [forgotSuccess, setForgotSuccess]   = useState(false);
 
   useEffect(() => {
     if (user) router.push('/dashboard');
@@ -63,6 +74,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
+      // Remember Me: store email preference
+      if (rememberMe) {
+        localStorage.setItem('nexcart_remember_email', email);
+      } else {
+        localStorage.removeItem('nexcart_remember_email');
+      }
       router.push('/dashboard');
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -71,6 +88,15 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  // Pre-fill email from Remember Me on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('nexcart_remember_email');
+    if (saved) {
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleGoogleLogin = async () => {
     setApiError('');
@@ -103,6 +129,41 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    if (!forgotEmail.trim()) { setForgotError('Email is required'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) { setForgotError('Please enter a valid email'); return; }
+    setForgotLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, forgotEmail.trim());
+      setForgotSuccess(true);
+    } catch (err: unknown) {
+      const error = err as { code?: string };
+      if (error.code === 'auth/user-not-found') {
+        setForgotError('No account found with this email address.');
+      } else {
+        setForgotError('Failed to send reset email. Please try again.');
+      }
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const openForgot = () => {
+    setForgotEmail(email); // pre-fill with current email if any
+    setForgotError('');
+    setForgotSuccess(false);
+    setShowForgot(true);
+  };
+
+  const closeForgot = () => {
+    setShowForgot(false);
+    setForgotEmail('');
+    setForgotError('');
+    setForgotSuccess(false);
   };
 
   return (
@@ -223,6 +284,69 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* ── Forgot Password slide-down panel ── */}
+          {showForgot && (
+            <div className="mb-6 border border-border bg-bg-card p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary-accent" />
+                  <span className="text-sm font-semibold text-text-primary">Reset your password</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeForgot}
+                  className="text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {forgotSuccess ? (
+                <div className="flex items-start gap-3 text-sm">
+                  <CheckCircle className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-success">Reset email sent!</p>
+                    <p className="text-text-secondary mt-0.5">
+                      Check your inbox at <span className="font-medium text-text-primary">{forgotEmail}</span> and follow the link to reset your password.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-3">
+                  <p className="text-xs text-text-secondary">
+                    Enter the email associated with your account and we&apos;ll send you a password reset link.
+                  </p>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => { setForgotEmail(e.target.value); setForgotError(''); }}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    className="w-full h-10 px-3 text-sm bg-bg border border-border text-text-primary placeholder-text-secondary/40 focus:outline-none focus:border-primary-accent transition-colors"
+                  />
+                  {forgotError && (
+                    <p className="text-xs text-error">{forgotError}</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="flex items-center justify-center gap-2 w-full h-10 bg-primary-accent text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {forgotLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        Send Reset Email
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
           {/* Google Login */}
           <button
             type="button"
@@ -267,29 +391,70 @@ export default function LoginPage() {
               autoComplete="email"
             />
 
-            <div className="relative">
-              <Input
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
-                }}
-                error={errors.password}
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-[34px] text-text-secondary hover:text-text-primary cursor-pointer"
-                tabIndex={-1}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+            <div>
+              <div className="relative">
+                <Input
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
+                  }}
+                  error={errors.password}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-[34px] text-text-secondary hover:text-text-primary cursor-pointer"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* Forgot password link — below the password field */}
+              <div className="flex justify-end mt-1.5">
+                <button
+                  type="button"
+                  onClick={openForgot}
+                  className="text-xs text-primary-accent hover:underline cursor-pointer transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
             </div>
+
+            {/* Remember Me */}
+            <label className="flex items-center gap-2.5 cursor-pointer group w-fit">
+              <div className="relative flex items-center justify-center">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="sr-only"
+                />
+                <div
+                  className={`h-4 w-4 border transition-colors duration-150 flex items-center justify-center ${
+                    rememberMe
+                      ? 'bg-primary-accent border-primary-accent'
+                      : 'bg-bg border-border group-hover:border-primary-accent/60'
+                  }`}
+                >
+                  {rememberMe && (
+                    <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                Remember me
+              </span>
+            </label>
 
             <Button type="submit" loading={loading} className="w-full">
               <LogIn className="mr-2 h-4 w-4" />

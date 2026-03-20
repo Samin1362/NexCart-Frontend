@@ -204,6 +204,14 @@ export interface TopCategory {
   count: number;
 }
 
+export interface TopProduct {
+  productId: string;
+  title: string;
+  image: string;
+  totalQty: number;
+  totalRevenue: number;
+}
+
 export interface ChartData {
   revenueByMonth: RevenueByMonth[];
   ordersByStatus: OrdersByStatus[];
