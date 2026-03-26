@@ -185,7 +185,7 @@ export default function DealsSection() {
   if (!loading && products.length === 0) return null;
 
   return (
-    <section className="py-16 sm:py-20 bg-bg">
+    <section className="py-16 sm:py-20 bg-bg overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -243,7 +243,7 @@ export default function DealsSection() {
                 key={product._id}
                 initial={{ opacity: 0, x: index % 2 === 0 ? -55 : 55 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
+                viewport={{ once: true, margin: '80px' }}
                 transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: index * 0.07 }}
               >
                 <DealCard product={product} />

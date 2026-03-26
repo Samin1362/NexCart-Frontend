@@ -113,8 +113,8 @@ export default function ChatWidget() {
         <button
           onClick={() => setOpen(true)}
           className={cn(
-            'fixed bottom-6 z-50 group cursor-pointer transition-all duration-300',
-            cartDrawerOpen ? 'left-6' : 'right-6'
+            'fixed bottom-5 sm:bottom-6 z-50 group cursor-pointer transition-all duration-300',
+            cartDrawerOpen ? 'left-4 sm:left-6' : 'right-4 sm:right-6'
           )}
           aria-label="Open AI chat"
         >
@@ -134,9 +134,9 @@ export default function ChatWidget() {
       {open && (
         <div
           className={cn(
-            'animate-chat-slide-up fixed bottom-6 z-50 flex flex-col border border-border bg-bg',
-            'w-[calc(100vw-24px)] sm:w-[360px] md:w-[400px]',
-            cartDrawerOpen ? 'left-3 sm:left-6' : 'right-3 sm:right-6'
+            'animate-chat-slide-up fixed bottom-5 sm:bottom-6 z-50 flex flex-col border border-border bg-bg',
+            'w-[calc(100vw-32px)] sm:w-[360px] md:w-[400px]',
+            cartDrawerOpen ? 'left-4 sm:left-6' : 'right-4 sm:right-6'
           )}
           style={{
             height: '540px',

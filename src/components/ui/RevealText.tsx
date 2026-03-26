@@ -19,7 +19,7 @@ export default function RevealText({ children, delay = 0, className = '' }: Reve
       <motion.div
         initial={{ y: '105%', opacity: 0 }}
         whileInView={{ y: '0%', opacity: 1 }}
-        viewport={{ once: true, margin: '-30px' }}
+        viewport={{ once: true, margin: '60px' }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay }}
       >
         {children}

@@ -89,7 +89,7 @@ export default function HowItWorksSection() {
             variants={containerVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, margin: '100px' }}
           >
             {steps.map((step, i) => {
               const Icon = step.icon;

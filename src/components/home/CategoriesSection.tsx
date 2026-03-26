@@ -89,7 +89,7 @@ function CategoryCard({ category, index }: { category: ICategory; index: number 
       ref={cardRef}
       initial={{ opacity: 0, x: dir.x, y: dir.y, scale: 0.88 }}
       whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: '-40px' }}
+      viewport={{ once: true, margin: '80px' }}
       transition={{ type: 'spring', damping: 20, stiffness: 200, delay: index * 0.06 }}
       style={{
         rotateX: srx,
@@ -162,7 +162,7 @@ export default function CategoriesSection() {
   if (!loading && categories.length === 0) return null;
 
   return (
-    <section className="py-16 sm:py-20 bg-bg">
+    <section className="py-16 sm:py-20 bg-bg overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Header */}

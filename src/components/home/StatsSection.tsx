@@ -93,7 +93,7 @@ export default function StatsSection() {
                 className="group flex flex-col items-center text-center bg-bg px-6 py-10 transition-colors duration-200 hover:bg-bg-card"
                 initial={{ opacity: 0, y: 32 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-20px' }}
+                viewport={{ once: true, margin: '60px' }}
                 transition={{ type: 'spring', damping: 20, stiffness: 200, delay: i * 0.1 }}
               >
                 <div className="relative mb-4 flex h-12 w-12 items-center justify-center border border-border bg-bg-card text-primary-accent transition-all duration-300 group-hover:border-primary-accent/40 group-hover:bg-primary-accent/5">

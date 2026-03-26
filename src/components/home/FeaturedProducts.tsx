@@ -46,7 +46,7 @@ export default function FeaturedProducts() {
   if (!loading && products.length === 0) return null;
 
   return (
-    <section className="py-16 sm:py-20 bg-bg-card">
+    <section className="py-16 sm:py-20 bg-bg-card overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -102,7 +102,7 @@ export default function FeaturedProducts() {
             variants={containerVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, margin: '100px' }}
           >
             {products.slice(0, 8).map((product) => (
               <motion.div key={product._id} variants={itemVariants}>
