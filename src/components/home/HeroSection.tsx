@@ -16,6 +16,7 @@ import {
   Watch,
   Laptop,
 } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 const trustItems = [
   { icon: <Truck className="h-4 w-4" />, label: 'Free Shipping', sub: 'On orders over $50' },
@@ -58,23 +59,63 @@ const mockProducts = [
 
 const brands = ['Apple', 'Samsung', 'Sony', 'Nike', 'Adidas', 'Dell', 'LG', 'Canon', 'Bose', 'Logitech'];
 
+// "Shop Smarter." split into chars for individual animation
+const LINE_1 = 'Shop Smarter.'.split('');
+const LINE_1_TOTAL_DELAY = 0.15 + LINE_1.length * 0.025;
+
+// Subtext words for word-by-word animation
+const SUBTEXT_WORDS =
+  'Discover thousands of premium products from top brands — all in one place. Unbeatable prices, fast delivery, and an experience that feels effortless.'.split(
+    ' '
+  );
+
 export default function HeroSection() {
+  // Global scroll Y for parallax
+  const { scrollY } = useScroll();
+
+  // Front orb moves up faster → strong depth feeling
+  const orb1Y = useTransform(scrollY, [0, 600], [0, -90]);
+  // Back orb moves up slower
+  const orb2Y = useTransform(scrollY, [0, 600], [0, -45]);
+  // Dot grid moves slightly opposite → counter-parallax
+  const dotGridY = useTransform(scrollY, [0, 600], [0, 28]);
+
   return (
     <section className="relative overflow-hidden bg-bg">
 
       {/* ── Background layers ── */}
-      {/* Dot grid */}
-      <div className="absolute inset-0 dot-grid opacity-[0.4]" />
 
-      {/* Gradient orbs */}
-      <div
-        className="animate-orb-drift absolute -top-32 -right-32 h-[600px] w-[600px] opacity-[0.12] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #2563EB 0%, transparent 70%)' }}
-      />
-      <div
-        className="animate-orb-drift absolute -bottom-40 -left-40 h-[500px] w-[500px] opacity-[0.10] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', animationDelay: '4s' }}
-      />
+      {/* Dot grid with counter-parallax */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ y: dotGridY }}
+      >
+        <div className="h-full w-full dot-grid opacity-[0.4]" />
+      </motion.div>
+
+      {/* Front orb — blue, moves faster */}
+      <motion.div
+        className="absolute -top-32 -right-32 pointer-events-none"
+        style={{ y: orb1Y }}
+      >
+        <div
+          className="animate-orb-drift h-[600px] w-[600px] opacity-[0.12]"
+          style={{ background: 'radial-gradient(circle, #2563EB 0%, transparent 70%)' }}
+        />
+      </motion.div>
+
+      {/* Back orb — violet, moves slower */}
+      <motion.div
+        className="absolute -bottom-40 -left-40 pointer-events-none"
+        style={{ y: orb2Y }}
+      >
+        <div
+          className="animate-orb-drift h-[500px] w-[500px] opacity-[0.10]"
+          style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', animationDelay: '4s' }}
+        />
+      </motion.div>
+
+      {/* Center accent orb — static depth */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[700px] w-[700px] opacity-[0.04] pointer-events-none"
         style={{ background: 'radial-gradient(circle, #EC4899 0%, transparent 60%)' }}
@@ -89,7 +130,7 @@ export default function HeroSection() {
           {/* ── LEFT COLUMN ── */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left lg:pr-12">
 
-            {/* Announcement pill */}
+            {/* Announcement pill — CSS animation (fast, lightweight) */}
             <div
               className="animate-slide-left mb-7 inline-flex items-center gap-2.5 border border-border bg-bg-card px-4 py-2"
               style={{ animationDelay: '0.05s' }}
@@ -106,23 +147,64 @@ export default function HeroSection() {
               </span>
             </div>
 
-            {/* Heading */}
+            {/* ── Heading — character-by-character spring animation ── */}
             <h1
-              className="animate-slide-left max-w-xl text-[2.6rem] sm:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-text-primary"
-              style={{ animationDelay: '0.15s' }}
+              className="max-w-xl text-[2.6rem] sm:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-text-primary"
+              style={{ perspective: '600px' }}
             >
-              Shop Smarter.
-              <br />
-              <span className="gradient-text">Live Better.</span>
+              {/* Line 1: each character springs in individually */}
+              <span className="block" aria-label="Shop Smarter.">
+                {LINE_1.map((char, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, y: 24, rotateX: -40 }}
+                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                    transition={{
+                      type: 'spring',
+                      damping: 14,
+                      stiffness: 280,
+                      delay: 0.15 + i * 0.025,
+                    }}
+                    style={{ display: 'inline-block', transformOrigin: 'bottom center' }}
+                  >
+                    {char === ' ' ? '\u00A0' : char}
+                  </motion.span>
+                ))}
+              </span>
+
+              {/* Line 2: gradient text animates as a single unit */}
+              <motion.span
+                className="gradient-text block"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  type: 'spring',
+                  damping: 14,
+                  stiffness: 280,
+                  delay: LINE_1_TOTAL_DELAY + 0.05,
+                }}
+              >
+                Live Better.
+              </motion.span>
             </h1>
 
-            {/* Subtext */}
-            <p
-              className="animate-slide-left mt-6 max-w-lg text-base sm:text-lg text-text-secondary leading-relaxed"
-              style={{ animationDelay: '0.25s' }}
-            >
-              Discover thousands of premium products from top brands — all in one place.
-              Unbeatable prices, fast delivery, and an experience that feels effortless.
+            {/* ── Subtext — word-by-word fade-up ── */}
+            <p className="mt-6 max-w-lg text-base sm:text-lg text-text-secondary leading-relaxed">
+              {SUBTEXT_WORDS.map((word, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.38 + i * 0.028,
+                    duration: 0.38,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  style={{ display: 'inline-block', marginRight: '0.3em' }}
+                >
+                  {word}
+                </motion.span>
+              ))}
             </p>
 
             {/* CTA buttons */}
@@ -175,7 +257,7 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Trust badges */}
+            {/* Trust badges with micro-parallax */}
             <div
               className="animate-slide-left mt-10 grid grid-cols-3 gap-3 w-full max-w-lg"
               style={{ animationDelay: '0.55s' }}
@@ -227,15 +309,11 @@ export default function HeroSection() {
               <div className="divide-y divide-border">
                 {mockProducts.map((p, i) => (
                   <div key={i} className="flex items-center gap-3 px-4 py-3.5 hover:bg-bg-card transition-colors">
-                    {/* Icon square */}
                     <div className={`h-10 w-10 shrink-0 flex items-center justify-center ${p.color}`}>
                       {p.icon}
                     </div>
-
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-text-primary truncate">{p.title}</p>
-                      {/* Stars */}
                       <div className="flex items-center gap-1 mt-0.5">
                         {Array.from({ length: 5 }).map((_, si) => (
                           <Star
@@ -246,8 +324,6 @@ export default function HeroSection() {
                         <span className="text-[9px] text-text-secondary ml-0.5">({p.reviews})</span>
                       </div>
                     </div>
-
-                    {/* Price + badge */}
                     <div className="text-right shrink-0">
                       <p className="text-xs font-bold text-text-primary">{p.price}</p>
                       <p className="text-[9px] text-text-secondary line-through">{p.was}</p>
@@ -324,10 +400,8 @@ export default function HeroSection() {
 
       {/* ── Brand ticker ── */}
       <div className="relative border-t border-border overflow-hidden bg-bg-card">
-        {/* Left fade mask */}
         <div className="pointer-events-none absolute left-0 top-0 h-full w-24 z-10"
           style={{ background: 'linear-gradient(to right, var(--bg-card), transparent)' }} />
-        {/* Right fade mask */}
         <div className="pointer-events-none absolute right-0 top-0 h-full w-24 z-10"
           style={{ background: 'linear-gradient(to left, var(--bg-card), transparent)' }} />
 

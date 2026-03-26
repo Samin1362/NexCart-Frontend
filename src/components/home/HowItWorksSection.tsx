@@ -1,4 +1,8 @@
+'use client';
+
 import { Search, CreditCard, Truck, ArrowRight, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import RevealText from '@/components/ui/RevealText';
 
 const steps = [
   {
@@ -27,6 +31,22 @@ const steps = [
   },
 ];
 
+// Container staggers each step 0.22s after the previous
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.22, delayChildren: 0.15 } },
+};
+
+const stepVariants = {
+  hidden: { opacity: 0, y: 36, scale: 0.94 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring' as const, damping: 18, stiffness: 200 },
+  },
+};
+
 export default function HowItWorksSection() {
   return (
     <section className="relative py-16 sm:py-24 bg-bg-card border-y border-border overflow-hidden">
@@ -43,54 +63,72 @@ export default function HowItWorksSection() {
             </span>
             <span className="text-xs font-bold uppercase tracking-widest text-primary-accent">Simple Process</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">How It Works</h2>
-          <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
-            From browsing to your doorstep — shopping with NexCart takes just three effortless steps.
-          </p>
+          <RevealText delay={0.05}>
+            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">How It Works</h2>
+          </RevealText>
+          <RevealText delay={0.1}>
+            <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
+              From browsing to your doorstep — shopping with NexCart takes just three effortless steps.
+            </p>
+          </RevealText>
         </div>
 
         {/* Steps */}
-        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="relative">
+          {/* Connector line — draws itself in */}
+          <motion.div
+            className="hidden md:block absolute top-[3.25rem] left-[calc(33.33%+1.5rem)] right-[calc(33.33%+1.5rem)] h-px border-t-2 border-dashed border-border z-0 origin-left"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          />
 
-          {/* Connector (desktop) */}
-          <div className="hidden md:block absolute top-[3.25rem] left-[calc(33.33%+1.5rem)] right-[calc(33.33%+1.5rem)] h-px border-t-2 border-dashed border-border z-0" />
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-60px' }}
+          >
+            {steps.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <motion.div
+                  key={i}
+                  variants={stepVariants}
+                  className="relative z-10 group flex flex-col border border-border bg-bg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary-accent/40 hover:shadow-md"
+                >
+                  {/* Top accent strip */}
+                  <div className="h-[3px] w-full bg-border transition-colors duration-300 group-hover:bg-primary-accent" />
 
-          {steps.map((step, i) => {
-            const Icon = step.icon;
-            return (
-              <div
-                key={i}
-                className="relative z-10 group flex flex-col border border-border bg-bg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary-accent/40 hover:shadow-md"
-              >
-                {/* Top accent strip */}
-                <div className="h-[3px] w-full bg-border transition-colors duration-300 group-hover:bg-primary-accent" />
-
-                {/* Icon + step number */}
-                <div className="flex items-start justify-between px-5 pt-5 pb-4">
-                  <div className="flex h-13 w-13 items-center justify-center border border-border bg-bg-card text-primary-accent transition-all duration-300 group-hover:border-primary-accent/40 group-hover:bg-primary-accent/5 group-hover:scale-110">
-                    <Icon className="h-6 w-6" />
+                  {/* Icon + step number */}
+                  <div className="flex items-start justify-between px-5 pt-5 pb-4">
+                    <div className="flex h-13 w-13 items-center justify-center border border-border bg-bg-card text-primary-accent transition-all duration-300 group-hover:border-primary-accent/40 group-hover:bg-primary-accent/5 group-hover:scale-110">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <span className="text-5xl font-black leading-none select-none text-border transition-colors duration-300 group-hover:text-primary-accent/15">
+                      {step.step}
+                    </span>
                   </div>
-                  <span className="text-5xl font-black leading-none select-none text-border transition-colors duration-300 group-hover:text-primary-accent/15">
-                    {step.step}
-                  </span>
-                </div>
 
-                {/* Content */}
-                <div className="px-5 pb-5 flex flex-col gap-2 flex-1">
-                  <span className="w-fit text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border border-primary-accent/20 bg-primary-accent/5 text-primary-accent">
-                    {step.tag}
-                  </span>
-                  <h3 className="text-base font-bold text-text-primary">{step.title}</h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">{step.description}</p>
-                </div>
+                  {/* Content */}
+                  <div className="px-5 pb-5 flex flex-col gap-2 flex-1">
+                    <span className="w-fit text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border border-primary-accent/20 bg-primary-accent/5 text-primary-accent">
+                      {step.tag}
+                    </span>
+                    <h3 className="text-base font-bold text-text-primary">{step.title}</h3>
+                    <p className="text-sm text-text-secondary leading-relaxed">{step.description}</p>
+                  </div>
 
-                {/* Bottom hover arrow */}
-                <div className="flex items-center gap-1.5 px-5 py-3 border-t border-border text-xs font-semibold text-primary-accent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Step {i + 1} of {steps.length} <ArrowRight className="h-3 w-3" />
-                </div>
-              </div>
-            );
-          })}
+                  {/* Bottom hover arrow */}
+                  <div className="flex items-center gap-1.5 px-5 py-3 border-t border-border text-xs font-semibold text-primary-accent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    Step {i + 1} of {steps.length} <ArrowRight className="h-3 w-3" />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
       </div>
     </section>

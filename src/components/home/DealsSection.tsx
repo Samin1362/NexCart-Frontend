@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, ArrowRight, Flame, Package, ShoppingCart, Eye, Check, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '@/lib/api';
 import Skeleton from '@/components/ui/Skeleton';
+import RevealText from '@/components/ui/RevealText';
 import { IProduct } from '@/types';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
@@ -197,10 +199,14 @@ export default function DealsSection() {
                 Limited Time
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">Hot Deals</h2>
-            <p className="mt-1.5 text-sm text-text-secondary">
-              Unbeatable prices on top products — grab them before they&apos;re gone.
-            </p>
+            <RevealText delay={0.05}>
+              <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">Hot Deals</h2>
+            </RevealText>
+            <RevealText delay={0.1}>
+              <p className="mt-1.5 text-sm text-text-secondary">
+                Unbeatable prices on top products — grab them before they&apos;re gone.
+              </p>
+            </RevealText>
           </div>
           <Link
             href="/products"
@@ -232,8 +238,16 @@ export default function DealsSection() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((product) => (
-              <DealCard key={product._id} product={product} />
+            {products.map((product, index) => (
+              <motion.div
+                key={product._id}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -55 : 55 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: index * 0.07 }}
+              >
+                <DealCard product={product} />
+              </motion.div>
             ))}
           </div>
         )}

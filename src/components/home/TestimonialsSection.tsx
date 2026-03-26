@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Star, Quote, MessageSquare } from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '@/lib/api';
+import RevealText from '@/components/ui/RevealText';
 
 interface Testimonial {
   name: string;
@@ -81,17 +83,33 @@ export default function TestimonialsSection() {
             </span>
             <span className="text-xs font-bold uppercase tracking-widest text-primary-accent">Reviews</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">What Our Customers Say</h2>
-          <p className="mt-2 text-sm text-text-secondary">
-            Real feedback from verified shoppers who love NexCart.
-          </p>
+          <RevealText delay={0.05}>
+            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">What Our Customers Say</h2>
+          </RevealText>
+          <RevealText delay={0.1}>
+            <p className="mt-2 text-sm text-text-secondary">
+              Real feedback from verified shoppers who love NexCart.
+            </p>
+          </RevealText>
         </div>
 
-        {/* Cards */}
+        {/* Cards — fan out from a stacked deck */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <div
+          {testimonials.map((t, i) => {
+            // Each card starts rotated + scaled as if in a deck, then fans out
+            const deckInitial = [
+              { rotateZ: -7, scale: 0.86, y: 28 },
+              { rotateZ: 0,  scale: 0.82, y: 38 },
+              { rotateZ: 7,  scale: 0.86, y: 28 },
+            ][i] ?? { rotateZ: 0, scale: 0.85, y: 30 };
+
+            return (
+            <motion.div
               key={i}
+              initial={{ opacity: 0, ...deckInitial }}
+              whileInView={{ opacity: 1, rotateZ: 0, scale: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ type: 'spring', damping: 16, stiffness: 180, delay: i * 0.14 }}
               className="group relative flex flex-col border border-border bg-bg-card overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary-accent/40 hover:shadow-md"
             >
               {/* Top strip */}
@@ -135,8 +153,9 @@ export default function TestimonialsSection() {
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            </motion.div>
+            );
+          })}
         </div>
 
         {/* Trust stats */}

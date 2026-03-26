@@ -6,6 +6,8 @@ import AuthProvider from '@/providers/AuthProvider';
 import CartProvider from '@/providers/CartProvider';
 import ChatWidget from '@/components/ChatWidget';
 import ServerWakeLoader from '@/components/ServerWakeLoader';
+import SmoothScrollProvider from '@/components/SmoothScrollProvider';
+import ScrollProgress from '@/components/ui/ScrollProgress';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -35,9 +37,12 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CartProvider>
-              {children}
-              <ChatWidget />
-              <ServerWakeLoader />
+              <SmoothScrollProvider>
+                <ScrollProgress />
+                {children}
+                <ChatWidget />
+                <ServerWakeLoader />
+              </SmoothScrollProvider>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>
