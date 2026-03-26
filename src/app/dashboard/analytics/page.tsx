@@ -6,7 +6,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
   BarChart, Bar, LabelList,
-  TooltipProps,
 } from 'recharts';
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { motion } from 'framer-motion';
@@ -43,7 +42,7 @@ const CONTAINER_VARIANTS = {
 };
 const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 0.61, 0.36, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 0.61, 0.36, 1] as [number, number, number, number] } },
 };
 
 // ─── Export Helper ────────────────────────────────────────────────────────────
@@ -89,7 +88,7 @@ function exportChartAsPng(wrapperId: string, filename: string) {
 
 // ─── Custom Tooltips ──────────────────────────────────────────────────────────
 
-function CustomRevenueTooltip({ active, payload, label }: TooltipProps<ValueType, NameType>) {
+function CustomRevenueTooltip({ active, payload, label }: { active?: boolean; payload?: { value?: ValueType }[]; label?: NameType }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="border border-border bg-bg shadow-lg px-4 py-3 min-w-[140px]">
@@ -101,7 +100,7 @@ function CustomRevenueTooltip({ active, payload, label }: TooltipProps<ValueType
   );
 }
 
-function CustomPieTooltip({ active, payload }: TooltipProps<ValueType, NameType>) {
+function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: { name?: NameType; value?: ValueType; payload?: { index?: number } }[] }) {
   if (!active || !payload?.length) return null;
   const { name, value } = payload[0];
   const colorIndex = payload[0].payload?.index ?? 0;
@@ -116,7 +115,7 @@ function CustomPieTooltip({ active, payload }: TooltipProps<ValueType, NameType>
   );
 }
 
-function CustomBarTooltip({ active, payload, label }: TooltipProps<ValueType, NameType>) {
+function CustomBarTooltip({ active, payload, label }: { active?: boolean; payload?: { value?: ValueType }[]; label?: NameType }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="border border-border bg-bg shadow-lg px-4 py-3 min-w-[140px]">
