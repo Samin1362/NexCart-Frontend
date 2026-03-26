@@ -179,7 +179,7 @@ function ProductsContent() {
           />
 
           {/* Gradient accent bar */}
-          <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-primary-accent via-indigo-400 to-purple-500" />
+          <div className="absolute top-0 inset-x-0 h-0.5 bg-linear-to-r from-primary-accent via-indigo-400 to-purple-500" />
 
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
 

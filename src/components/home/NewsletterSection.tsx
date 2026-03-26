@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Send, Mail, Tag, Zap, Bell, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const perks = [
   { icon: Tag, text: 'Exclusive member-only discounts' },
@@ -54,8 +55,13 @@ export default function NewsletterSection() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-          {/* Left: copy */}
-          <div>
+          {/* Left: copy — slides in from left */}
+          <motion.div
+            initial={{ opacity: 0, x: -60 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div className="flex items-center gap-2 mb-3">
               <span className="flex h-6 w-6 items-center justify-center bg-white/20 text-white">
                 <Mail className="h-3.5 w-3.5" />
@@ -89,10 +95,16 @@ export default function NewsletterSection() {
                 );
               })}
             </ul>
-          </div>
+          </motion.div>
 
-          {/* Right: form card */}
-          <div className="bg-white/5 border border-white/10 backdrop-blur-sm p-6 sm:p-8">
+          {/* Right: form card — slides in from right */}
+          <motion.div
+            initial={{ opacity: 0, x: 60 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+            className="bg-white/5 border border-white/10 backdrop-blur-sm p-6 sm:p-8"
+          >
             {subscribed ? (
               <div className="flex flex-col items-center text-center py-6">
                 {/* Success icon */}
@@ -155,7 +167,7 @@ export default function NewsletterSection() {
                 </p>
               </>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

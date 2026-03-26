@@ -16,6 +16,7 @@ import {
 } from 'framer-motion';
 import api from '@/lib/api';
 import Skeleton from '@/components/ui/Skeleton';
+import RevealText from '@/components/ui/RevealText';
 import { ICategory } from '@/types';
 
 /* ── Category icon lookup ── */
@@ -76,13 +77,20 @@ function CategoryCard({ category, index }: { category: ICategory; index: number 
 
   const handleMouseLeave = () => { mx.set(0); my.set(0); };
 
+  // Each card flies in from a different compass direction
+  const directions = [
+    { x: -60, y: -40 }, { x: 0, y: -60 }, { x: 60, y: -40 }, { x: 60, y: 0 },
+    { x: 60, y: 40 },   { x: 0, y: 60 },  { x: -60, y: 40 }, { x: -60, y: 0 },
+  ];
+  const dir = directions[index % directions.length];
+
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, x: dir.x, y: dir.y, scale: 0.88 }}
+      whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
       viewport={{ once: true, margin: '-40px' }}
-      transition={{ delay: index * 0.06, duration: 0.45, ease: 'easeOut' }}
+      transition={{ type: 'spring', damping: 20, stiffness: 200, delay: index * 0.06 }}
       style={{
         rotateX: srx,
         rotateY: sry,
@@ -166,10 +174,14 @@ export default function CategoriesSection() {
               </span>
               <span className="text-xs font-bold uppercase tracking-widest text-primary-accent">Browse</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">Shop by Category</h2>
-            <p className="mt-1.5 text-sm text-text-secondary">
-              Find exactly what you need across our curated collections.
-            </p>
+            <RevealText delay={0.05}>
+              <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">Shop by Category</h2>
+            </RevealText>
+            <RevealText delay={0.1}>
+              <p className="mt-1.5 text-sm text-text-secondary">
+                Find exactly what you need across our curated collections.
+              </p>
+            </RevealText>
           </div>
           <Link
             href="/products"

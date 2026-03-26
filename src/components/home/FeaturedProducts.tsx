@@ -3,10 +3,27 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '@/lib/api';
 import Skeleton from '@/components/ui/Skeleton';
+import RevealText from '@/components/ui/RevealText';
 import ProductCard from '@/components/products/ProductCard';
 import { IProduct } from '@/types';
+
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.82, y: 24 },
+  show: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: 'spring' as const, damping: 20, stiffness: 260 },
+  },
+};
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<IProduct[]>([]);
@@ -43,8 +60,12 @@ export default function FeaturedProducts() {
                 Curated Selection
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">Featured Products</h2>
-            <p className="mt-1.5 text-sm text-text-secondary">Handpicked products just for you.</p>
+            <RevealText delay={0.05}>
+              <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">Featured Products</h2>
+            </RevealText>
+            <RevealText delay={0.1}>
+              <p className="mt-1.5 text-sm text-text-secondary">Handpicked products just for you.</p>
+            </RevealText>
           </div>
           <Link
             href="/products"
@@ -76,11 +97,19 @@ export default function FeaturedProducts() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {products.slice(0, 8).map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <motion.div key={product._id} variants={itemVariants}>
+                <ProductCard product={product} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
 
         {/* Mobile view all */}
