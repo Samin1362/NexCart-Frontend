@@ -121,7 +121,7 @@ function CategoryCard({ category, index }: { category: ICategory; index: number 
         <div className="mt-6 mb-4 flex h-16 w-16 items-center justify-center border border-border bg-bg transition-all duration-300 group-hover:border-primary-accent/40 group-hover:bg-primary-accent/5"
           style={{ transform: 'translateZ(20px)' }}
         >
-          <Icon className="h-7 w-7 text-text-secondary transition-colors duration-300 group-hover:text-primary-accent" />
+          <Icon className="h-7 w-7 text-text-secondary transition-all duration-300 group-hover:text-primary-accent group-hover:scale-[1.18] group-hover:drop-shadow-[0_0_8px_rgba(37,99,235,0.55)]" />
         </div>
 
         {/* Name */}

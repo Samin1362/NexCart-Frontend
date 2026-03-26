@@ -25,9 +25,11 @@ import {
   Info,
   Phone,
 } from 'lucide-react';
+import { motion, LayoutGroup } from 'framer-motion';
 import { useAuth } from '@/providers/AuthProvider';
 import { useCart } from '@/providers/CartProvider';
 import { cn } from '@/lib/utils';
+import AnimatedTooltip from '@/components/ui/AnimatedTooltip';
 
 const navLinks = [
   { label: 'Home', href: '/', icon: Home },
@@ -48,6 +50,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [badgeKey, setBadgeKey] = useState(0);
+  const [cartWiggling, setCartWiggling] = useState(false);
   const [announcementVisible, setAnnouncementVisible] = useState(() => {
     if (typeof window === 'undefined') return true;
     return localStorage.getItem('nexcart-announcement-dismissed') !== 'true';
@@ -67,6 +70,8 @@ export default function Navbar() {
   useEffect(() => {
     if (itemCount !== prevItemCount.current && itemCount > 0) {
       setBadgeKey((k) => k + 1);
+      setCartWiggling(true);
+      setTimeout(() => setCartWiggling(false), 600);
     }
     prevItemCount.current = itemCount;
   }, [itemCount]);
@@ -177,62 +182,71 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  'relative px-4 py-2 text-sm font-medium transition-all duration-200 group',
-                  isActive(link.href)
-                    ? 'text-primary-accent'
-                    : 'text-text-secondary hover:text-text-primary'
-                )}
-              >
-                {link.label}
-                {/* Animated underline */}
-                <span
+          <LayoutGroup id="navbar-links">
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
                   className={cn(
-                    'absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] transition-all duration-300',
+                    'relative px-4 py-2 text-sm font-medium transition-colors duration-200 group',
                     isActive(link.href)
-                      ? 'w-4/5'
-                      : 'w-0 group-hover:w-3/5'
+                      ? 'text-primary-accent'
+                      : 'text-text-secondary hover:text-text-primary'
                   )}
-                  style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED)' }}
-                />
-              </Link>
-            ))}
-          </div>
+                >
+                  {link.label}
+                  {isActive(link.href) ? (
+                    <motion.span
+                      layoutId="nav-underline"
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-4/5"
+                      style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED)' }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                    />
+                  ) : (
+                    <span
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-0 group-hover:w-3/5 transition-all duration-300"
+                      style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED)' }}
+                    />
+                  )}
+                </Link>
+              ))}
+            </div>
+          </LayoutGroup>
 
           {/* Right controls */}
           <div className="flex items-center gap-0.5">
 
             {/* Search */}
-            <Link
-              href="/products"
-              className="hidden sm:flex h-9 w-9 items-center justify-center text-text-secondary hover:text-primary-accent hover:bg-primary-accent/8 transition-all duration-200"
-              aria-label="Search"
-            >
-              <Search className="h-[17px] w-[17px]" />
-            </Link>
+            <AnimatedTooltip content="Search products">
+              <Link
+                href="/products"
+                className="hidden sm:flex h-9 w-9 items-center justify-center text-text-secondary hover:text-primary-accent hover:bg-primary-accent/8 transition-all duration-200"
+                aria-label="Search"
+              >
+                <Search className="h-[17px] w-[17px]" />
+              </Link>
+            </AnimatedTooltip>
 
             {/* Theme toggle */}
             {mounted && (
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="h-9 w-9 flex items-center justify-center text-text-secondary hover:text-primary-accent hover:bg-primary-accent/8 transition-all duration-200 cursor-pointer"
-                aria-label="Toggle theme"
-              >
-                <span
-                  className="block transition-all duration-500"
-                  style={{ transform: theme === 'dark' ? 'rotate(0deg) scale(1)' : 'rotate(180deg) scale(1)' }}
+              <AnimatedTooltip content={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-9 w-9 flex items-center justify-center text-text-secondary hover:text-primary-accent hover:bg-primary-accent/8 transition-all duration-200 cursor-pointer"
+                  aria-label="Toggle theme"
                 >
-                  {theme === 'dark'
-                    ? <Sun className="h-[17px] w-[17px]" />
-                    : <Moon className="h-[17px] w-[17px]" />
-                  }
-                </span>
-              </button>
+                  <span
+                    className="block transition-all duration-500"
+                    style={{ transform: theme === 'dark' ? 'rotate(0deg) scale(1)' : 'rotate(180deg) scale(1)' }}
+                  >
+                    {theme === 'dark'
+                      ? <Sun className="h-[17px] w-[17px]" />
+                      : <Moon className="h-[17px] w-[17px]" />
+                    }
+                  </span>
+                </button>
+              </AnimatedTooltip>
             )}
 
             {!loading && (
@@ -240,12 +254,13 @@ export default function Navbar() {
                 {user ? (
                   <>
                     {/* Cart */}
+                    <AnimatedTooltip content="View cart">
                     <Link
                       href="/cart"
                       className="relative h-9 w-9 flex items-center justify-center text-text-secondary hover:text-primary-accent hover:bg-primary-accent/8 transition-all duration-200"
                       aria-label="Cart"
                     >
-                      <ShoppingCart className="h-[17px] w-[17px]" />
+                      <ShoppingCart className={cn('h-[17px] w-[17px]', cartWiggling && 'animate-cart-wiggle')} />
                       {itemCount > 0 && (
                         <span
                           key={badgeKey}
@@ -255,6 +270,7 @@ export default function Navbar() {
                         </span>
                       )}
                     </Link>
+                    </AnimatedTooltip>
 
                     {/* Profile dropdown — desktop */}
                     <div className="relative hidden md:block ml-1" ref={profileRef}>
@@ -467,23 +483,29 @@ export default function Navbar() {
           <p className="px-5 pb-2 text-[10px] font-bold uppercase tracking-widest text-white/25">
             Navigation
           </p>
-          {navLinks.map((link) => {
+          {navLinks.map((link, i) => {
             const Icon = link.icon;
             return (
-              <Link
+              <motion.div
                 key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-5 py-3 text-sm font-medium transition-all duration-150 border-r-2',
-                  isActive(link.href)
-                    ? 'text-white bg-white/[0.06] border-primary-accent'
-                    : 'text-white/50 hover:text-white hover:bg-white/[0.04] border-transparent'
-                )}
+                initial={{ opacity: 0, x: 20 }}
+                animate={mobileOpen ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                transition={{ delay: i * 0.07 + 0.12, type: 'spring', damping: 22, stiffness: 280 }}
               >
-                <Icon className={cn('h-4 w-4', isActive(link.href) ? 'text-primary-accent' : 'text-white/30')} />
-                {link.label}
-              </Link>
+                <Link
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-5 py-3 text-sm font-medium transition-all duration-150 border-r-2',
+                    isActive(link.href)
+                      ? 'text-white bg-white/[0.06] border-primary-accent'
+                      : 'text-white/50 hover:text-white hover:bg-white/[0.04] border-transparent'
+                  )}
+                >
+                  <Icon className={cn('h-4 w-4', isActive(link.href) ? 'text-primary-accent' : 'text-white/30')} />
+                  {link.label}
+                </Link>
+              </motion.div>
             );
           })}
         </nav>

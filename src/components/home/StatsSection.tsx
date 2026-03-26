@@ -48,7 +48,8 @@ function AnimatedCounter({ target, suffix, inView }: { target: number; suffix: s
     return () => clearInterval(timer);
   }, [target, inView]);
 
-  return <span>{count}{suffix}</span>;
+  const isDecimal = target % 1 !== 0;
+  return <span>{isDecimal ? count : count.toLocaleString()}{suffix}</span>;
 }
 
 export default function StatsSection() {
@@ -95,7 +96,15 @@ export default function StatsSection() {
                 viewport={{ once: true, margin: '-20px' }}
                 transition={{ type: 'spring', damping: 20, stiffness: 200, delay: i * 0.1 }}
               >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center border border-border bg-bg-card text-primary-accent transition-all duration-300 group-hover:border-primary-accent/40 group-hover:bg-primary-accent/5">
+                <div className="relative mb-4 flex h-12 w-12 items-center justify-center border border-border bg-bg-card text-primary-accent transition-all duration-300 group-hover:border-primary-accent/40 group-hover:bg-primary-accent/5">
+                  {inView && (
+                    <motion.div
+                      className="absolute inset-0 border border-primary-accent"
+                      initial={{ scale: 1, opacity: 0.7 }}
+                      animate={{ scale: 2.4, opacity: 0 }}
+                      transition={{ duration: 1.1, delay: i * 0.12 + 0.4, ease: 'easeOut' }}
+                    />
+                  )}
                   <Icon className="h-5 w-5" />
                 </div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-primary-accent tabular-nums">

@@ -8,6 +8,7 @@ import ChatWidget from '@/components/ChatWidget';
 import ServerWakeLoader from '@/components/ServerWakeLoader';
 import SmoothScrollProvider from '@/components/SmoothScrollProvider';
 import ScrollProgress from '@/components/ui/ScrollProgress';
+import CursorSpotlight from '@/components/ui/CursorSpotlight';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -39,6 +40,7 @@ export default function RootLayout({
             <CartProvider>
               <SmoothScrollProvider>
                 <ScrollProgress />
+                <CursorSpotlight />
                 {children}
                 <ChatWidget />
                 <ServerWakeLoader />

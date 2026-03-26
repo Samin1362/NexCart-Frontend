@@ -17,6 +17,7 @@ import {
   Laptop,
 } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import MagneticButton from '@/components/ui/MagneticButton';
 
 const trustItems = [
   { icon: <Truck className="h-4 w-4" />, label: 'Free Shipping', sub: 'On orders over $50' },
@@ -212,21 +213,25 @@ export default function HeroSection() {
               className="animate-slide-left mt-9 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto"
               style={{ animationDelay: '0.35s' }}
             >
-              <Link
-                href="/products?sort=-createdAt"
-                className="btn-shimmer group inline-flex h-13 w-full sm:w-auto items-center justify-center gap-2.5 px-9 text-sm font-bold text-white transition-all duration-200"
-                style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)' }}
-              >
-                Browse Products
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </Link>
-              <Link
-                href="/products?discounted=true"
-                className="inline-flex h-13 w-full sm:w-auto items-center justify-center gap-2 border border-border bg-bg px-9 text-sm font-bold text-text-primary hover:border-primary-accent hover:text-primary-accent transition-all duration-200"
-              >
-                <TrendingUp className="h-4 w-4" />
-                View Deals
-              </Link>
+              <MagneticButton>
+                <Link
+                  href="/products?sort=-createdAt"
+                  className="btn-shimmer group inline-flex h-13 w-full sm:w-auto items-center justify-center gap-2.5 px-9 text-sm font-bold text-white transition-all duration-200"
+                  style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)' }}
+                >
+                  Browse Products
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+                </Link>
+              </MagneticButton>
+              <MagneticButton>
+                <Link
+                  href="/products?discounted=true"
+                  className="inline-flex h-13 w-full sm:w-auto items-center justify-center gap-2 border border-border bg-bg px-9 text-sm font-bold text-text-primary hover:border-primary-accent hover:text-primary-accent transition-all duration-200"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  View Deals
+                </Link>
+              </MagneticButton>
             </div>
 
             {/* Social proof row */}
