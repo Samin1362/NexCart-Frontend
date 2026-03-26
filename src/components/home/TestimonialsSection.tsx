@@ -72,7 +72,7 @@ export default function TestimonialsSection() {
   }, []);
 
   return (
-    <section className="py-16 sm:py-24 bg-bg">
+    <section className="py-16 sm:py-24 bg-bg overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -108,7 +108,7 @@ export default function TestimonialsSection() {
               key={i}
               initial={{ opacity: 0, ...deckInitial }}
               whileInView={{ opacity: 1, rotateZ: 0, scale: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
+              viewport={{ once: true, margin: '80px' }}
               transition={{ type: 'spring', damping: 16, stiffness: 180, delay: i * 0.14 }}
               className="group relative flex flex-col border border-border bg-bg-card overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary-accent/40 hover:shadow-md"
             >

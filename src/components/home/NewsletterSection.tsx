@@ -60,7 +60,7 @@ export default function NewsletterSection() {
           <motion.div
             initial={{ opacity: 0, x: -60 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
+            viewport={{ once: true, margin: '80px' }}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="flex items-center gap-2 mb-3">
@@ -102,7 +102,7 @@ export default function NewsletterSection() {
           <motion.div
             initial={{ opacity: 0, x: 60 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
+            viewport={{ once: true, margin: '80px' }}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
             className="bg-white/5 border border-white/10 backdrop-blur-sm p-6 sm:p-8"
           >
