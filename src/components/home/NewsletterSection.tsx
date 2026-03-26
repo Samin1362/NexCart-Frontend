@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Send, Mail, Tag, Zap, Bell, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
+import MagneticButton from '@/components/ui/MagneticButton';
 
 const perks = [
   { icon: Tag, text: 'Exclusive member-only discounts' },
@@ -138,6 +139,7 @@ export default function NewsletterSection() {
                     />
                   </div>
 
+                  <MagneticButton strength={5}>
                   <button
                     type="submit"
                     disabled={loading}
@@ -159,6 +161,7 @@ export default function NewsletterSection() {
                       </>
                     )}
                   </button>
+                  </MagneticButton>
                 </form>
 
                 {/* Trust note */}

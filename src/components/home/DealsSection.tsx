@@ -137,7 +137,7 @@ function DealCard({ product }: { product: IProduct }) {
                 'transition-all duration-200 cursor-pointer disabled:cursor-not-allowed',
                 added
                   ? 'bg-success text-white'
-                  : 'bg-primary-accent text-white hover:bg-primary-accent/90'
+                  : 'bg-primary-accent text-white hover:bg-primary-accent/90 hover:-translate-y-[2px]'
               )}
             >
               {adding ? (
