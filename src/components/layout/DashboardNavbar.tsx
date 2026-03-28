@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import {
-  Sun, Moon, Menu, Bell, User, LogOut,
+  Sun, Moon, Menu, User, LogOut,
   ChevronDown, Settings, Home, ChevronRight,
   LayoutDashboard, ShoppingBag, Star, BarChart3,
   Package, FolderTree, ClipboardList, Users,
@@ -132,16 +132,6 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
               }
             </button>
           )}
-
-          {/* Notifications */}
-          <button
-            className="relative h-9 w-9 flex items-center justify-center text-text-secondary hover:text-primary-accent hover:bg-primary-accent/8 transition-all duration-200 cursor-pointer"
-            aria-label="Notifications"
-          >
-            <Bell className="h-4 w-4" />
-            {/* Dot indicator */}
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-error rounded-full border-2 border-bg" />
-          </button>
 
           {/* Profile dropdown */}
           {user && (

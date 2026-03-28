@@ -161,6 +161,21 @@ export interface ApiResponse<T = unknown> {
 }
 
 // ========================
+// Wishlist
+// ========================
+
+export interface WishlistContextType {
+  wishlistItems: IProduct[];
+  wishlistIds: Set<string>;
+  wishlistCount: number;
+  isLoading: boolean;
+  toggleWishlist: (product: IProduct) => Promise<void>;
+  removeFromWishlist: (productId: string) => Promise<void>;
+  clearWishlist: () => Promise<void>;
+  isWishlisted: (productId: string) => boolean;
+}
+
+// ========================
 // Auth
 // ========================
 

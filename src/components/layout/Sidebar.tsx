@@ -5,9 +5,10 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingBag, Star, User, Settings,
   BarChart3, Package, FolderTree, ClipboardList, Users,
-  X, Zap, ChevronLeft, ChevronRight, LogOut,
+  X, Zap, ChevronLeft, ChevronRight, LogOut, Heart,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
+import { useWishlist } from '@/providers/WishlistProvider';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -24,9 +25,10 @@ const userNavGroups: NavGroup[] = [
   {
     label: 'Main',
     items: [
-      { label: 'Overview',   href: '/dashboard',          Icon: LayoutDashboard },
-      { label: 'My Orders',  href: '/dashboard/orders',   Icon: ShoppingBag },
-      { label: 'My Reviews', href: '/dashboard/reviews',  Icon: Star },
+      { label: 'Overview',   href: '/dashboard',           Icon: LayoutDashboard },
+      { label: 'My Orders',  href: '/dashboard/orders',    Icon: ShoppingBag },
+      { label: 'My Reviews', href: '/dashboard/reviews',   Icon: Star },
+      { label: 'Wishlist',   href: '/dashboard/wishlist',  Icon: Heart },
     ],
   },
   {
@@ -74,6 +76,7 @@ export interface SidebarProps {
 
 export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }: SidebarProps) {
   const { user, logout } = useAuth();
+  const { wishlistCount } = useWishlist();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -187,7 +190,14 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse }: 
                     )} />
 
                     {(!collapsed || mobile) && (
-                      <span className="truncate">{item.label}</span>
+                      <>
+                        <span className="truncate flex-1">{item.label}</span>
+                        {item.href === '/dashboard/wishlist' && wishlistCount > 0 && (
+                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center bg-primary-accent/10 border border-primary-accent/20 px-1 text-[10px] font-bold text-primary-accent">
+                            {wishlistCount}
+                          </span>
+                        )}
+                      </>
                     )}
                   </Link>
                 );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Star, X, SlidersHorizontal, Tag, DollarSign, LayoutGrid } from 'lucide-react';
 
 const PRICE_MAX = 5000;
@@ -20,6 +20,142 @@ interface FilterSidebarProps {
   onChange: (filters: Filters) => void;
   open: boolean;
   onClose: () => void;
+}
+
+// ── Custom dual-thumb range slider ──────────────────────────────────────────
+// Uses div thumbs + window mouse/touch events so drags are always smooth.
+// Internal localValue state updates during drag; onChange fires only on release
+// so the parent never re-renders (and never remounts this component) mid-drag.
+function PriceRangeSlider({
+  min, max, step, value, onChange,
+}: {
+  min: number; max: number; step: number;
+  value: [number, number];
+  onChange: (next: [number, number]) => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef<'min' | 'max' | null>(null);
+  const [local, setLocal] = useState<[number, number]>(value);
+  const localRef = useRef(local);
+  const onChangeRef = useRef(onChange);
+
+  // Keep refs in sync without re-registering event listeners
+  useEffect(() => { localRef.current = local; }, [local]);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+
+  // When the committed parent value changes (e.g. quick-preset click), sync local
+  useEffect(() => {
+    if (!dragging.current) setLocal(value);
+  }, [value]);
+
+  const toPercent = (v: number) => ((v - min) / (max - min)) * 100;
+
+  // Register window listeners once; read state via refs to avoid stale closures
+  useEffect(() => {
+    const snap = (v: number) =>
+      Math.max(min, Math.min(max, Math.round(v / step) * step));
+
+    const fromClientX = (clientX: number) => {
+      const rect = trackRef.current?.getBoundingClientRect();
+      if (!rect) return min;
+      return snap(min + Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * (max - min));
+    };
+
+    const onMove = (clientX: number) => {
+      if (!dragging.current) return;
+      const [lo, hi] = localRef.current;
+      const v = fromClientX(clientX);
+      if (dragging.current === 'min') {
+        setLocal([Math.min(v, hi - step), hi]);
+      } else {
+        setLocal([lo, Math.max(v, lo + step)]);
+      }
+    };
+
+    const onUp = () => {
+      if (!dragging.current) return;
+      onChangeRef.current(localRef.current);
+      dragging.current = null;
+    };
+
+    const onMouseMove = (e: MouseEvent) => onMove(e.clientX);
+    const onTouchMove = (e: TouchEvent) => onMove(e.touches[0].clientX);
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, [min, max, step]); // stable — refs handle the rest
+
+  // Clicking the track jumps the nearest thumb
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragging.current) return;
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const v = Math.max(min, Math.min(max,
+      Math.round((min + Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * (max - min)) / step) * step
+    ));
+    const [lo, hi] = local;
+    const next: [number, number] =
+      Math.abs(v - lo) <= Math.abs(v - hi)
+        ? [Math.min(v, hi - step), hi]
+        : [lo, Math.max(v, lo + step)];
+    setLocal(next);
+    onChange(next);
+  };
+
+  return (
+    <div className="pt-1 pb-2">
+      {/* Live value labels */}
+      <div className="flex justify-between items-center mb-3">
+        <span className="text-xs font-semibold text-primary-accent bg-primary-accent/8 border border-primary-accent/20 px-2 py-0.5">
+          ${local[0].toLocaleString()}
+        </span>
+        <span className="text-[10px] text-text-secondary">–</span>
+        <span className="text-xs font-semibold text-primary-accent bg-primary-accent/8 border border-primary-accent/20 px-2 py-0.5">
+          {local[1] >= max ? `$${max.toLocaleString()}+` : `$${local[1].toLocaleString()}`}
+        </span>
+      </div>
+
+      {/* Track */}
+      <div
+        ref={trackRef}
+        className="relative h-6 flex items-center select-none mx-1 cursor-pointer"
+        onClick={handleTrackClick}
+      >
+        {/* Background track */}
+        <div className="absolute inset-x-0 h-[3px] bg-border rounded-full" />
+        {/* Active fill */}
+        <div
+          className="absolute h-[3px] bg-primary-accent rounded-full pointer-events-none"
+          style={{
+            left: `${toPercent(local[0])}%`,
+            width: `${toPercent(local[1]) - toPercent(local[0])}%`,
+          }}
+        />
+        {/* Min thumb */}
+        <div
+          className="absolute z-10 h-[18px] w-[18px] -translate-x-1/2 rounded-full bg-primary-accent border-[3px] border-bg shadow-md cursor-grab active:cursor-grabbing transition-transform hover:scale-110"
+          style={{ left: `${toPercent(local[0])}%` }}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); dragging.current = 'min'; }}
+          onTouchStart={(e) => { e.stopPropagation(); dragging.current = 'min'; }}
+        />
+        {/* Max thumb */}
+        <div
+          className="absolute z-10 h-[18px] w-[18px] -translate-x-1/2 rounded-full bg-primary-accent border-[3px] border-bg shadow-md cursor-grab active:cursor-grabbing transition-transform hover:scale-110"
+          style={{ left: `${toPercent(local[1])}%` }}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); dragging.current = 'max'; }}
+          onTouchStart={(e) => { e.stopPropagation(); dragging.current = 'max'; }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default function FilterSidebar({ filters, onChange, open, onClose }: FilterSidebarProps) {
@@ -116,60 +252,17 @@ export default function FilterSidebar({ filters, onChange, open, onClose }: Filt
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-text-secondary">Price Range</h4>
         </div>
 
-        {/* Current range display */}
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-xs font-semibold text-primary-accent bg-primary-accent/8 border border-primary-accent/20 px-2 py-0.5">
-            ${(Number(filters.minPrice) || 0).toLocaleString()}
-          </span>
-          <span className="text-[10px] text-text-secondary">–</span>
-          <span className="text-xs font-semibold text-primary-accent bg-primary-accent/8 border border-primary-accent/20 px-2 py-0.5">
-            {filters.maxPrice ? `$${Number(filters.maxPrice).toLocaleString()}` : `$${PRICE_MAX.toLocaleString()}+`}
-          </span>
-        </div>
-
-        {/* Dual range slider */}
-        <div className="relative h-5 flex items-center mb-4 mx-1">
-          {/* Track background */}
-          <div className="absolute inset-x-0 h-1 bg-border" />
-          {/* Active range highlight */}
-          <div
-            className="absolute h-1 bg-primary-accent"
-            style={{
-              left: `${((Number(filters.minPrice) || 0) / PRICE_MAX) * 100}%`,
-              right: `${100 - ((Number(filters.maxPrice) || PRICE_MAX) / PRICE_MAX) * 100}%`,
-            }}
-          />
-          {/* Min thumb */}
-          <input
-            type="range"
-            min={0}
-            max={PRICE_MAX}
-            step={50}
-            value={Number(filters.minPrice) || 0}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              const maxVal = Number(filters.maxPrice) || PRICE_MAX;
-              if (val < maxVal) update('minPrice', val === 0 ? '' : String(val));
-            }}
-            className="absolute w-full h-1 appearance-none bg-transparent cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-accent [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-bg [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-grab [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:border-radius-full [&::-moz-range-thumb]:bg-primary-accent [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-bg [&::-moz-range-thumb]:cursor-grab"
-            style={{ zIndex: (Number(filters.minPrice) || 0) > PRICE_MAX - 200 ? 5 : 3 }}
-          />
-          {/* Max thumb */}
-          <input
-            type="range"
-            min={0}
-            max={PRICE_MAX}
-            step={50}
-            value={Number(filters.maxPrice) || PRICE_MAX}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              const minVal = Number(filters.minPrice) || 0;
-              if (val > minVal) update('maxPrice', val === PRICE_MAX ? '' : String(val));
-            }}
-            className="absolute w-full h-1 appearance-none bg-transparent cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-accent [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-bg [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-grab [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:bg-primary-accent [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-bg [&::-moz-range-thumb]:cursor-grab"
-            style={{ zIndex: 4 }}
-          />
-        </div>
+        <PriceRangeSlider
+          min={0}
+          max={PRICE_MAX}
+          step={50}
+          value={[Number(filters.minPrice) || 0, Number(filters.maxPrice) || PRICE_MAX]}
+          onChange={([lo, hi]) => onChange({
+            ...filters,
+            minPrice: lo === 0 ? '' : String(lo),
+            maxPrice: hi === PRICE_MAX ? '' : String(hi),
+          })}
+        />
         {/* Quick price ranges */}
         <div className="flex flex-wrap gap-1.5 mt-2.5">
           {[['0','50'],['50','150'],['150','500'],['500','']].map(([min, max], i) => {
