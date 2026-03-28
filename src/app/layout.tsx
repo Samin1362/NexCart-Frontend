@@ -4,6 +4,7 @@ import './globals.css';
 import ThemeProvider from '@/providers/ThemeProvider';
 import AuthProvider from '@/providers/AuthProvider';
 import CartProvider from '@/providers/CartProvider';
+import WishlistProvider from '@/providers/WishlistProvider';
 import ChatWidget from '@/components/ChatWidget';
 import ServerWakeLoader from '@/components/ServerWakeLoader';
 import SmoothScrollProvider from '@/components/SmoothScrollProvider';
@@ -38,6 +39,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CartProvider>
+              <WishlistProvider>
               <SmoothScrollProvider>
                 <ScrollProgress />
                 <CursorSpotlight />
@@ -45,6 +47,7 @@ export default function RootLayout({
                 <ChatWidget />
                 <ServerWakeLoader />
               </SmoothScrollProvider>
+              </WishlistProvider>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

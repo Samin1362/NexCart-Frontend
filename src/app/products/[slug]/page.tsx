@@ -21,6 +21,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import api from '@/lib/api';
 import { useAuth } from '@/providers/AuthProvider';
 import { useCart } from '@/providers/CartProvider';
+import { useWishlist } from '@/providers/WishlistProvider';
 import { IProduct, ICategory } from '@/types';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const { slug } = use(params);
   const { user } = useAuth();
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   const [product, setProduct] = useState<IProduct | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
@@ -43,7 +45,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [activeTab, setActiveTab] = useState<TabId>('description');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -83,15 +84,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     fetchProduct();
   }, [slug]);
 
-  // Load wishlist state from localStorage when product changes
-  useEffect(() => {
-    if (!slug) return;
-    try {
-      const wl: string[] = JSON.parse(localStorage.getItem('nexcart-wishlist') || '[]');
-      setWishlisted(wl.includes(slug));
-    } catch { /* ignore */ }
-  }, [slug]);
-
   // Close lightbox on Escape
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -102,16 +94,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const handleImgError = (i: number) => {
     setImgErrors((prev) => { const next = [...prev]; next[i] = true; return next; });
-  };
-
-  const toggleWishlist = () => {
-    if (!slug) return;
-    try {
-      const wl: string[] = JSON.parse(localStorage.getItem('nexcart-wishlist') || '[]');
-      const next = wishlisted ? wl.filter((s) => s !== slug) : [...wl, slug];
-      localStorage.setItem('nexcart-wishlist', JSON.stringify(next));
-      setWishlisted(!wishlisted);
-    } catch { /* ignore */ }
   };
 
   const handleShare = async () => {
@@ -565,17 +547,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               {/* Wishlist + Share row */}
               <div className="flex items-center gap-2 pt-1">
                 <button
-                  onClick={toggleWishlist}
+                  onClick={() => product && toggleWishlist(product)}
                   className={cn(
                     'flex items-center gap-2 h-10 px-4 border text-sm font-medium transition-all duration-200 cursor-pointer',
-                    wishlisted
+                    product && isWishlisted(product._id)
                       ? 'border-error/50 bg-error/8 text-error'
                       : 'border-border text-text-secondary hover:border-error/50 hover:text-error'
                   )}
-                  aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                  aria-label={product && isWishlisted(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
-                  <Heart className={cn('h-4 w-4 transition-all', wishlisted && 'fill-error')} />
-                  <span>{wishlisted ? 'Wishlisted' : 'Wishlist'}</span>
+                  <Heart className={cn('h-4 w-4 transition-all', product && isWishlisted(product._id) && 'fill-error')} />
+                  <span>{product && isWishlisted(product._id) ? 'Wishlisted' : 'Wishlist'}</span>
                 </button>
 
                 <button

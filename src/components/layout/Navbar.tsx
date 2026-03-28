@@ -24,10 +24,12 @@ import {
   Package,
   Info,
   Phone,
+  Heart,
 } from 'lucide-react';
 import { motion, LayoutGroup } from 'framer-motion';
 import { useAuth } from '@/providers/AuthProvider';
 import { useCart } from '@/providers/CartProvider';
+import { useWishlist } from '@/providers/WishlistProvider';
 import { cn } from '@/lib/utils';
 import AnimatedTooltip from '@/components/ui/AnimatedTooltip';
 
@@ -41,6 +43,7 @@ const navLinks = [
 export default function Navbar() {
   const { user, loading, logout } = useAuth();
   const { itemCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
@@ -253,6 +256,22 @@ export default function Navbar() {
               <>
                 {user ? (
                   <>
+                    {/* Wishlist */}
+                    <AnimatedTooltip content="My wishlist">
+                      <Link
+                        href="/dashboard/wishlist"
+                        className="relative h-9 w-9 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/8 transition-all duration-200"
+                        aria-label="Wishlist"
+                      >
+                        <Heart className="h-[17px] w-[17px]" />
+                        {wishlistCount > 0 && (
+                          <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center bg-error px-[3px] text-[9px] font-bold text-white rounded-full">
+                            {wishlistCount > 99 ? '99+' : wishlistCount}
+                          </span>
+                        )}
+                      </Link>
+                    </AnimatedTooltip>
+
                     {/* Cart */}
                     <AnimatedTooltip content="View cart">
                     <Link
@@ -525,6 +544,14 @@ export default function Navbar() {
                 {itemCount > 0 && (
                   <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center bg-primary-accent px-1.5 text-[10px] font-bold text-white rounded-full">
                     {itemCount > 99 ? '99+' : itemCount}
+                  </span>
+                )}
+              </MobileDarkLink>
+              <MobileDarkLink href="/dashboard/wishlist" icon={<Heart className="h-4 w-4" />} onClick={() => setMobileOpen(false)}>
+                Wishlist
+                {wishlistCount > 0 && (
+                  <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center bg-error px-1.5 text-[10px] font-bold text-white rounded-full">
+                    {wishlistCount > 99 ? '99+' : wishlistCount}
                   </span>
                 )}
               </MobileDarkLink>

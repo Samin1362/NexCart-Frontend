@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, ShoppingCart, Package, Eye, Zap, Check, Loader2 } from 'lucide-react';
+import { Star, ShoppingCart, Package, Eye, Zap, Check, Loader2, Heart } from 'lucide-react';
 import { IProduct } from '@/types';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { useCart } from '@/providers/CartProvider';
+import { useWishlist } from '@/providers/WishlistProvider';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -17,6 +18,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { user } = useAuth();
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -113,6 +115,22 @@ export default function ProductCard({ product }: ProductCardProps) {
           >
             <Eye className="h-3.5 w-3.5" />
           </Link>
+
+          {/* Wishlist toggle */}
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product); }}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center border',
+              'opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0',
+              'transition-all duration-200 delay-[40ms] cursor-pointer',
+              isWishlisted(product._id)
+                ? 'bg-error/10 border-error/40 text-error'
+                : 'bg-bg/90 border-border text-text-secondary hover:border-error/40 hover:text-error'
+            )}
+            aria-label={isWishlisted(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <Heart className={cn('h-3.5 w-3.5 transition-all', isWishlisted(product._id) && 'fill-error')} />
+          </button>
 
           {/* Add to cart quick */}
           {user && !outOfStock && (

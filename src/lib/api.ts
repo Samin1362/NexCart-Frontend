@@ -103,4 +103,14 @@ api.interceptors.response.use(
   }
 );
 
+// ========================
+// Wishlist API
+// ========================
+
+export const fetchWishlist = () => api.get('/wishlist');
+export const toggleWishlistItem = (productId: string) => api.post(`/wishlist/${productId}`);
+export const removeWishlistItem = (productId: string) => api.delete(`/wishlist/${productId}`);
+export const clearWishlistApi = () => api.delete('/wishlist');
+export const checkWishlistStatus = (productId: string) => api.get(`/wishlist/check/${productId}`);
+
 export default api;
