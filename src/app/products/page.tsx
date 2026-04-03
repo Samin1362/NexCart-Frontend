@@ -44,7 +44,6 @@ function ProductsContent() {
   const [loading, setLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [bannerVisible, setBannerVisible] = useState(true);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const hasLoadedRef = useRef(false);
@@ -60,13 +59,6 @@ function ProductsContent() {
   });
 
   const debouncedSearch = useDebounce(search, 300);
-
-  /* Collapse banner on scroll */
-  useEffect(() => {
-    const onScroll = () => setBannerVisible(window.scrollY < 120);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
@@ -122,10 +114,11 @@ function ProductsContent() {
 
   const handlePageChange = (p: number) => {
     setPage(p);
-    // Scroll to product grid top (not page top)
-    setTimeout(() => {
-      gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
+    // Scroll to just above the product grid, accounting for the 60px sticky navbar.
+    if (gridRef.current) {
+      const top = window.scrollY + gridRef.current.getBoundingClientRect().top - 76;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
   };
 
   /* Active filter chips */
@@ -156,12 +149,9 @@ function ProductsContent() {
 
       <main className="flex-1">
 
-        {/* ── Page Banner (collapses on scroll) ── */}
+        {/* ── Page Banner ── */}
         <div
-          className={cn(
-            'relative overflow-hidden border-b border-border transition-all duration-300 ease-in-out',
-            bannerVisible ? 'max-h-72 opacity-100' : 'max-h-0 opacity-0 border-b-0'
-          )}
+          className="relative overflow-hidden border-b border-border"
           style={{ background: 'linear-gradient(135deg, #0F172A 0%, #0f1f42 55%, #1e3a8a 100%)' }}
         >
           {/* Dot grid overlay */}
