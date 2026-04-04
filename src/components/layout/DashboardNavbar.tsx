@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import {
@@ -145,9 +146,19 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
                     : 'border-transparent text-text-secondary hover:border-border hover:text-text-primary'
                 )}
               >
-                <div className="flex h-6 w-6 items-center justify-center bg-primary-accent text-white text-[11px] font-bold rounded-full shrink-0">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {user.avatar ? (
+                  <Image
+                    src={user.avatar}
+                    alt={user.name}
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="flex h-6 w-6 items-center justify-center bg-primary-accent text-white text-[11px] font-bold rounded-full shrink-0">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <span className="hidden sm:block max-w-[80px] truncate text-xs">{user.name}</span>
                 <ChevronDown className={cn('hidden sm:block h-3.5 w-3.5 transition-transform duration-200', profileOpen && 'rotate-180')} />
               </button>
@@ -156,9 +167,19 @@ export default function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
                 <div className="animate-dropdown-in absolute right-0 top-full mt-1.5 w-56 border border-border bg-bg shadow-xl z-50">
                   {/* User header */}
                   <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-border bg-bg-card">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary-accent text-white text-sm font-bold rounded-full">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name}
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary-accent text-white text-sm font-bold rounded-full">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-text-primary truncate">{user.name}</p>
                       <p className="text-xs text-text-secondary truncate">{user.email}</p>
