@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -308,6 +308,7 @@ export default function CheckoutPage() {
   const [apiError, setApiError] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false); // mobile collapsible
+  const orderPlaced = useRef(false);
 
   // Step tracking: shipping=1, payment=2, confirm=3
   // On this page, we show step 2 (both shipping + payment filled before placing)
@@ -333,9 +334,9 @@ export default function CheckoutPage() {
     }
   }, [authLoading, user, router]);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty (skip if order was just placed)
   useEffect(() => {
-    if (!cartLoading && user && (!cart || !cart.items || cart.items.length === 0)) {
+    if (!orderPlaced.current && !cartLoading && user && (!cart || !cart.items || cart.items.length === 0)) {
       router.push('/cart');
     }
   }, [cartLoading, user, cart, router]);
@@ -365,10 +366,11 @@ export default function CheckoutPage() {
         notes: notes.trim() || undefined,
       });
 
+      orderPlaced.current = true;
       await fetchCart();
       const order = data.data;
       router.push(
-        `/checkout/confirmation?orderId=${order._id}&orderNumber=${order.orderNumber}`
+        `/dashboard/orders?success=true&orderNumber=${order.orderNumber}`
       );
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };

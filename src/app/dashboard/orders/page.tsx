@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   ShoppingBag,
   ChevronDown,
@@ -8,6 +9,7 @@ import {
   MapPin,
   CreditCard,
   X,
+  CheckCircle,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -33,6 +35,8 @@ const paymentMethodLabel: Record<string, string> = {
 };
 
 export default function OrdersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +45,16 @@ export default function OrdersPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [showCancelModal, setShowCancelModal] = useState<string | null>(null);
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
+  useEffect(() => {
+    const isSuccess = searchParams.get('success') === 'true';
+    const orderNumber = searchParams.get('orderNumber');
+    if (isSuccess && orderNumber) {
+      setSuccessBanner(orderNumber);
+      router.replace('/dashboard/orders');
+    }
+  }, [searchParams, router]);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -83,6 +97,27 @@ export default function OrdersPage() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary">My Orders</h1>
       <p className="mt-1 text-sm text-text-secondary">View and manage your order history.</p>
+
+      {successBanner && (
+        <div className="mt-4 flex items-start gap-3 border border-green-500 bg-green-50 dark:bg-green-950/30 p-4">
+          <CheckCircle className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+              Order placed successfully!
+            </p>
+            <p className="text-sm text-green-700 dark:text-green-400">
+              Your order <span className="font-mono font-medium">#{successBanner}</span> has been confirmed and is now being processed.
+            </p>
+          </div>
+          <button
+            onClick={() => setSuccessBanner(null)}
+            className="text-green-600 hover:text-green-800 dark:text-green-400 shrink-0"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="mt-6 space-y-4">
