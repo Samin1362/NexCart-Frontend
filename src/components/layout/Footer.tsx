@@ -91,15 +91,15 @@ export default function Footer() {
             <div className="mt-5 space-y-2">
               <div className="flex items-center gap-2.5 text-xs text-white/40">
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                123 Commerce St, New York, NY 10001
+                Kuril Chowrasta, Vatara, Dhaka, Bangladesh
               </div>
               <div className="flex items-center gap-2.5 text-xs text-white/40">
                 <Phone className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                +1 (800) 123-4567
+                01757874416
               </div>
               <div className="flex items-center gap-2.5 text-xs text-white/40">
                 <Mail className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                hello@nexcart.com
+                saminisrak1991@gmail.com
               </div>
             </div>
 
